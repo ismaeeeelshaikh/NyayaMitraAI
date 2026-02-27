@@ -1,0 +1,102 @@
+{
+    "app_name": "Nyaya Mitra",
+    "tagline": "Your AI Legal Assistant",
+    "entry": {
+        "select_language": "Select Your Language",
+        "choose_mode": "How would you like to start?",
+        "chat_mode": "Chat with AI",
+        "chat_desc": "Ask legal questions in plain language",
+        "voice_mode": "Voice Mode",
+        "voice_desc": "Speak your problem, get answers",
+        "guest_note": "Continue as Guest (5 free questions)",
+        "register": "Create Free Account"
+    },
+    "dashboard": {
+        "title": "What do you need help with today?",
+        "popular_title": "Common Issues in Your Area",
+        "actions_title": "Quick Actions",
+        "updates_title": "Legal Updates",
+        "ask_question": "Ask Legal Question",
+        "build_timeline": "Build Case Timeline",
+        "generate_complaint": "Generate Complaint",
+        "scan_notice": "Scan Legal Notice",
+        "find_help": "Find Legal Aid"
+    },
+    "chat": {
+        "placeholder": "Describe your legal problem...",
+        "send": "Send",
+        "voice_start": "Start Speaking",
+        "voice_stop": "Stop",
+        "verified": "Verified",
+        "highly_verified": "Highly Verified",
+        "partially_verified": "Partially Verified",
+        "limited_info": "Limited Information",
+        "sources": "Legal Sources",
+        "do_this_now": "Do This Now",
+        "guest_limit": "questions remaining",
+        "guest_limit_reached": "You have used all 5 free questions. Register for unlimited access.",
+        "register_now": "Register Free"
+    },
+    "timeline": {
+        "title": "Build Your Case Timeline",
+        "desc": "Describe what happened. AI will extract dates and legal significance.",
+        "placeholder": "Tell your story with dates: 'In January 2024, my neighbor built a wall on my land. In February I sent a notice...'",
+        "generate": "Generate Timeline",
+        "export_pdf": "Export as PDF",
+        "gaps_title": "Missing Information (Collect These)",
+        "events_title": "Timeline Events"
+    },
+    "complaint": {
+        "title": "Generate Legal Complaint",
+        "select_type": "Select Complaint Type",
+        "police": "Police Complaint (FIR)",
+        "rti": "RTI Application",
+        "legal_notice": "Legal Notice",
+        "consumer": "Consumer Court",
+        "womens_cell": "Women's Cell",
+        "cyber": "Cyber Crime",
+        "your_details": "Your Details",
+        "name": "Full Name",
+        "phone": "Phone Number",
+        "address": "Address",
+        "incident": "Describe the Incident",
+        "relief": "What outcome do you want?",
+        "generate": "Generate Complaint",
+        "download": "Download PDF",
+        "tracking": "Tracking Number"
+    },
+    "notice": {
+        "title": "Scan Legal Notice",
+        "desc": "Upload a legal notice — AI will analyze it in 30 seconds",
+        "upload": "Upload Document",
+        "drag_drop": "Drag & drop PDF or image here, or click to browse",
+        "analyzing": "AI is analyzing your document...",
+        "analysis_ready": "Analysis Complete",
+        "deadline": "Response Deadline",
+        "risk": "Risk Level",
+        "demands": "Their Demands",
+        "consequences": "If You Ignore",
+        "what_to_do": "What You Should Do",
+        "sections_cited": "Laws Cited"
+    },
+    "legal_aid": {
+        "title": "Find Free Legal Aid",
+        "desc": "Government & NGO legal assistance near you",
+        "filter_state": "Filter by State",
+        "free": "FREE",
+        "rating": "Rating",
+        "contact": "Contact",
+        "languages": "Languages",
+        "specializes": "Specializes in",
+        "national_helplines": "National Helplines",
+        "capacity": "Capacity"
+    },
+    "common": {
+        "back": "Back",
+        "cancel": "Cancel",
+        "loading": "Loading...",
+        "error": "Something went wrong. Please try again.",
+        "crisis_title": "Emergency Helplines",
+        "crisis_desc": "Call immediately if you are in danger"
+    }
+}

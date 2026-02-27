@@ -1,0 +1,49 @@
+﻿$Region = "ap-south-1"
+$AccountId = (aws sts get-caller-identity --query Account --output text)
+
+Write-Host "Creating HTTP API..."
+$HttpApiId = aws apigatewayv2 create-api --name "NyayaMitra-HTTP-API" --protocol-type HTTP --cors-configuration AllowOrigins="*",AllowMethods="*",AllowHeaders="*" --query ApiId --output text
+
+function Create-HttpRoute {
+    param($RouteKey, $LambdaName)
+    $LambdaArn = "arn:aws:lambda:${Region}:${AccountId}:function:$LambdaName"
+    aws lambda add-permission --function-name $LambdaName --statement-id apigw-$LambdaName-$([guid]::NewGuid().ToString().Substring(0,8)) --action lambda:InvokeFunction --principal apigateway.amazonaws.com --source-arn "arn:aws:execute-api:${Region}:${AccountId}:${HttpApiId}/*" --region $Region 2>$null
+    $IntId = aws apigatewayv2 create-integration --api-id $HttpApiId --integration-type AWS_PROXY --integration-uri $LambdaArn --payload-format-version 2.0 --query IntegrationId --output text
+    aws apigatewayv2 create-route --api-id $HttpApiId --route-key $RouteKey --target "integrations/$IntId" | Out-Null
+}
+
+Create-HttpRoute "POST /v1/entry/session" "nyaya-mitra-session-handler"
+Create-HttpRoute "POST /v1/voice/input" "nyaya-mitra-voice-input"
+Create-HttpRoute "POST /v1/voice/output" "nyaya-mitra-text-to-speech"
+
+aws apigatewayv2 create-stage --api-id $HttpApiId --stage-name prod --auto-deploy | Out-Null
+$HttpUrl = "https://${HttpApiId}.execute-api.${Region}.amazonaws.com/prod"
+
+Write-Host "Creating WebSocket API..."
+$WsApiId = aws apigatewayv2 create-api --name "NyayaMitra-WS-API" --protocol-type WEBSOCKET --route-selection-expression '$request.body.action' --query ApiId --output text
+
+function Create-WsRoute {
+    param($RouteKey, $LambdaName)
+    $LambdaArn = "arn:aws:lambda:${Region}:${AccountId}:function:$LambdaName"
+    aws lambda add-permission --function-name $LambdaName --statement-id apigw-ws-$LambdaName-$([guid]::NewGuid().ToString().Substring(0,8)) --action lambda:InvokeFunction --principal apigateway.amazonaws.com --source-arn "arn:aws:execute-api:${Region}:${AccountId}:${WsApiId}/*" --region $Region 2>$null
+    $IntId = aws apigatewayv2 create-integration --api-id $WsApiId --integration-type AWS_PROXY --integration-uri "arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${LambdaArn}/invocations" --query IntegrationId --output text
+    aws apigatewayv2 create-route --api-id $WsApiId --route-key "$RouteKey" --target "integrations/$IntId" | Out-Null
+}
+
+Create-WsRoute "$connect" "nyaya-mitra-ws-connect"
+Create-WsRoute "$disconnect" "nyaya-mitra-ws-disconnect"
+Create-WsRoute "sendMessage" "nyaya-mitra-message-orchestrator"
+
+aws apigatewayv2 create-stage --api-id $WsApiId --stage-name prod --auto-deploy | Out-Null
+$WsUrl = "wss://${WsApiId}.execute-api.${Region}.amazonaws.com/prod"
+
+Write-Host "APIs created! URLs:"
+Write-Host "HTTP: $HttpUrl"
+Write-Host "WS: $WsUrl"
+
+$EnvContent = "VITE_HTTP_API_URL=$HttpUrl
+VITE_WEBSOCKET_URL=$WsUrl
+VITE_AWS_REGION=$Region
+VITE_GUEST_QUERY_LIMIT=5"
+Set-Content -Path "c:\Users\jatin sharma\OneDrive\Desktop\NYAYA MITRA\NyayaMitraAI\frontend\.env.local" -Value $EnvContent
+Write-Host "Frontend .env.local updated perfectly."
