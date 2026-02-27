@@ -1,0 +1,214 @@
+.dashboard-page {
+    padding: 24px;
+}
+
+.dashboard-header h1 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--gray-900);
+}
+
+.dashboard-header p {
+    color: var(--gray-500);
+    margin-bottom: 24px;
+}
+
+/* ── Stats Grid ── */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.stat-card-icon {
+    font-size: 2rem;
+    width: 56px;
+    height: 56px;
+    background: var(--primary-50);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-card-label {
+    font-size: 0.8rem;
+    color: var(--gray-500);
+    font-weight: 500;
+}
+
+.stat-card-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--gray-800);
+    display: block;
+}
+
+.stat-card-change {
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.stat-card-change.positive {
+    color: var(--success-600);
+}
+
+.stat-card-change.negative {
+    color: var(--danger-500);
+}
+
+/* ── Dashboard Grid ── */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.dashboard-card {
+    padding: 24px;
+}
+
+.dashboard-card h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    margin-bottom: 20px;
+}
+
+/* ── Issue Bars ── */
+.issue-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.issue-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.issue-label {
+    width: 100px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--gray-600);
+}
+
+.issue-bar-track {
+    flex: 1;
+    height: 10px;
+    background: var(--gray-100);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.issue-bar-fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    transition: width 1s ease;
+}
+
+.issue-count {
+    width: 40px;
+    text-align: right;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--gray-700);
+}
+
+/* ── Escalation List ── */
+.escalation-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.escalation-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px;
+    background: var(--gray-50);
+    border-radius: var(--radius-md);
+}
+
+.escalation-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.escalation-id {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--gray-400);
+}
+
+.escalation-issue {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.escalation-meta {
+    font-size: 0.75rem;
+    color: var(--gray-400);
+}
+
+/* ── States Grid ── */
+.states-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.state-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--gray-50);
+    border-radius: var(--radius-md);
+}
+
+.state-rank {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--accent-500);
+}
+
+.state-name {
+    flex: 1;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--gray-700);
+}
+
+.state-queries {
+    font-size: 0.8rem;
+    color: var(--gray-400);
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .states-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

@@ -1,0 +1,67 @@
+DOCUMENT_ID: cyber_crime_guide
+TITLE: Cyber Crime - Reporting and Legal Remedies in India
+CATEGORY: cyber_law
+LANGUAGE: en
+KEYWORDS: cyber, online fraud, hacking, phishing, sextortion, social media, IT Act
+
+FULL TEXT:
+
+CYBER CRIME IN INDIA - COMPLETE GUIDE
+
+TYPES OF CYBER CRIMES AND SECTIONS:
+
+1. ONLINE FINANCIAL FRAUD:
+- Section 66C IT Act: Identity theft - 3 years + Rs. 1 lakh fine
+- Section 66D IT Act: Cheating by personation - 3 years + Rs. 1 lakh fine
+- Section 420 IPC: Cheating
+
+2. HACKING/UNAUTHORIZED ACCESS:
+- Section 43 IT Act: Damage to computer systems - compensation
+- Section 66 IT Act: Computer related offences - 3 years + Rs. 5 lakh fine
+
+3. ONLINE HARASSMENT/CYBERSTALKING:
+- Section 66A IT Act: Sending offensive messages (use with 354D IPC)
+- Section 354D IPC: Stalking including online stalking - 3 years
+- Section 507 IPC: Criminal intimidation by anonymous communication
+
+4. OBSCENE CONTENT/MORPHING:
+- Section 66E IT Act: Violation of privacy - 3 years + Rs. 2 lakh fine
+- Section 67 IT Act: Publishing obscene material - 5 years + Rs. 10 lakh fine
+- Section 67A IT Act: Sexually explicit material - 7 years + Rs. 10 lakh fine
+
+5. SEXTORTION (Most Common):
+- Section 67A + 66E IT Act
+- Section 384 IPC: Extortion
+- DO NOT PAY THE MONEY - report immediately
+- Block the person on all platforms
+- Save screenshots as evidence
+
+HOW TO REPORT CYBER CRIME:
+
+METHOD 1 - NATIONAL PORTAL (Fastest):
+- Website: cybercrime.gov.in
+- 24/7 available
+- Report anonymously also possible
+- Helpline: 1930 (call immediately for financial fraud)
+
+METHOD 2 - LOCAL POLICE:
+- Cyber Crime Cell at nearest police station
+- Bring: Device, screenshots, transaction details
+
+METHOD 3 - COURT:
+- Direct complaint to Magistrate if police doesn't act
+- Section 156(3) CrPC: Court directs police to register FIR
+
+CRITICAL STEPS - DO IMMEDIATELY:
+1. Do NOT delete anything - screenshots, chats, emails are evidence
+2. Call 1930 IMMEDIATELY for online financial fraud (golden hour)
+3. Do NOT pay money to extortionists
+4. Block the fraudster but AFTER taking screenshots
+5. Change passwords immediately
+
+EVIDENCE TO PRESERVE:
+- Screenshots of conversation
+- URL of fraudulent website
+- Email headers
+- Transaction IDs/UTR numbers
+- Device on which fraud occurred

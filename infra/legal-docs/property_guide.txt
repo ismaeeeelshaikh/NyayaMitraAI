@@ -1,0 +1,60 @@
+DOCUMENT_ID: property_dispute_guide
+TITLE: Property Dispute Resolution in India
+CATEGORY: property_law
+LANGUAGE: en
+KEYWORDS: property, land, boundary, encroachment, title, rent, landlord, tenant, possession
+
+FULL TEXT:
+
+PROPERTY DISPUTES - COMPLETE RESOLUTION GUIDE
+
+TYPES OF PROPERTY DISPUTES:
+1. Title/Ownership disputes - who owns the property
+2. Boundary/Encroachment disputes - wall/fence on my land
+3. Landlord-Tenant disputes - rent, eviction, deposit
+4. Inheritance/Partition disputes - family property division
+5. Fraudulent sale/Transfer disputes
+
+STEP-BY-STEP RESOLUTION:
+
+STEP 1 - COLLECT DOCUMENTS (Most Important):
+- Sale deed / Gift deed / Will
+- Property tax receipts (last 5 years)
+- Encumbrance certificate (EC) from Sub-Registrar
+- Survey/Mutation records from Revenue Department
+- Possession letter and society NOC (for apartments)
+- Loan clearance certificate (if applicable)
+
+STEP 2 - SEND LEGAL NOTICE:
+Before going to court, send registered legal notice to opposite party.
+Give 30-60 days to respond. Keep postal receipt and delivery proof.
+
+STEP 3 - MEDIATION (Try this first):
+District Legal Services Authority (DLSA) offers FREE mediation.
+Faster than court - usually resolved in 2-4 sittings.
+Contact: district.legal@gov.in or nearest court complex.
+
+STEP 4 - REVENUE COURT (For agricultural land):
+Revenue courts handle agricultural land disputes.
+File before Tehsildar/SDM for mutation disputes.
+
+STEP 5 - CIVIL COURT:
+For title declaration: Civil Suit under Specific Relief Act
+For possession: Suit for possession with injunction
+For injunction (stop construction): Application under Order 39 CPC
+
+LIMITATION PERIODS (VERY IMPORTANT):
+- Possession of immovable property: 12 years
+- Recovery of land from government: 30 years
+- Title declaration: 12 years from date of adverse possession
+
+RENT CONTROL (Landlord-Tenant):
+- Rent Control Act varies state to state
+- In Maharashtra: Maharashtra Rent Control Act 1999
+- Standard Security Deposit: 2-3 months rent (not 10-12 months - illegal)
+- Notice period for eviction: Minimum 1 month
+- Tenant cannot be forcibly evicted without court order
+- Landlord must give 30 days written notice before legal eviction
+
+IMPORTANT TIP: Get Survey from Revenue Department first.
+This is the primary proof in boundary disputes.

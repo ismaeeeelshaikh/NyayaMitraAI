@@ -1,0 +1,66 @@
+DOCUMENT_ID: labor_laws_india
+TITLE: Indian Labor Laws - Workers Rights and Remedies
+CATEGORY: labor_law
+LANGUAGE: en
+KEYWORDS: salary, wages, termination, employer, employee, PF, ESI, gratuity, labor court
+
+FULL TEXT:
+
+INDIAN LABOR LAWS - COMPLETE WORKERS GUIDE
+
+KEY RIGHTS OF EVERY EMPLOYEE:
+
+1. SALARY/WAGES:
+- Minimum Wages Act 1948: State sets minimum wage by industry
+- Payment of Wages Act 1936: Wages must be paid by 7th (small firms) or 10th of month
+- Equal Remuneration Act: Equal pay for equal work (no gender discrimination)
+- Unlawful Deductions: Employer cannot deduct more than 50% of wages
+
+2. PROVIDENT FUND (PF):
+- Employees Provident Funds Act 1952
+- Mandatory for establishments with 20+ employees
+- Employee contributes 12% of basic salary; Employer matches
+- PF can be withdrawn after retirement, or partially for emergency
+- Contact: EPFO helpline 1800-118-005
+
+3. GRATUITY:
+- Payment of Gratuity Act 1972
+- Applicable after 5 years of continuous service
+- Formula: (Last salary x 15 x years of service) / 26
+- Must be paid within 30 days of leaving
+- Maximum: Rs. 20 Lakhs
+
+4. ESI (Employee State Insurance):
+- For employees earning up to Rs. 21,000/month
+- Free medical treatment at ESI hospitals
+- Sickness benefit: 70% of wages for 91 days
+
+5. MATERNITY BENEFIT:
+- Maternity Benefit Act 1961
+- 26 weeks paid maternity leave (for first 2 children)
+- Cannot be terminated during pregnancy
+
+6. TERMINATION RULES:
+- Industrial Disputes Act 1947
+- 100+ employees: Government permission needed to terminate
+- All employees: 1 month notice or pay in lieu of notice
+- Retrenchment compensation: 15 days salary per year of service
+- No termination during: maternity, strike notice period, inquiry
+
+HOW TO FILE LABOR COMPLAINT:
+1. First give written complaint to employer (keep copy)
+2. If unresolved: File with Labour Commissioner's office
+3. Labour Court: For unfair termination, wage disputes
+4. Industrial Tribunal: For large-scale disputes
+
+DOCUMENTS NEEDED:
+- Appointment letter
+- Last 6 months salary slips
+- Bank statements showing salary credits
+- PF passbook
+- Any written communication with employer
+
+HELPLINES:
+- Labour Commissioner: Contact state labor department
+- EPFO: 1800-118-005
+- National Labor Helpline: 14441
