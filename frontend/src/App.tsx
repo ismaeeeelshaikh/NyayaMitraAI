@@ -3,7 +3,8 @@ import { LanguageProvider } from './context/LanguageContext';
 import { SessionProvider } from './context/SessionContext';
 import { StealthProvider } from './context/StealthContext';
 import AppLayout from './components/layout/AppLayout';
-import EntryPage from './pages/EntryPage';
+import LandingPage from './pages/LandingPage';
+import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import ChatPage from './pages/ChatPage';
 import TimelinePage from './pages/TimelinePage';
@@ -18,8 +19,12 @@ export default function App() {
         <SessionProvider>
           <StealthProvider>
             <Routes>
-              <Route path="/" element={<Navigate to="/entry" replace />} />
-              <Route path="/entry" element={<EntryPage />} />
+              {/* Public routes */}
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/entry" element={<Navigate to="/login" replace />} />
+
+              {/* Authenticated routes (inside AppLayout with bottom navbar) */}
               <Route element={<AppLayout />}>
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/chat" element={<ChatPage />} />
@@ -28,6 +33,9 @@ export default function App() {
                 <Route path="/notice-scanner" element={<NoticeScannerPage />} />
                 <Route path="/legal-aid" element={<LegalAidPage />} />
               </Route>
+
+              {/* Fallback */}
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </StealthProvider>
         </SessionProvider>

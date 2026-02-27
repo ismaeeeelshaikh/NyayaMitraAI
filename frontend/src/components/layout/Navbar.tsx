@@ -1,65 +1,113 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { useStealth } from '../../context/StealthContext';
+import { useState } from 'react';
 
-const TABS = [
-    { path: '/dashboard', icon: 'Home', svg: <><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><path d="M9 22V12h6v10" /></> },
-    { path: '/chat', icon: 'Chat', svg: <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /> },
-    { path: '/timeline', icon: 'Docs', svg: <><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></> },
-    { path: '/complaint-generator', icon: 'File', svg: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" x2="8" y1="13" y2="13" /><line x1="16" x2="8" y1="17" y2="17" /><polyline points="10 9 9 9 8 9" /></> },
-    { path: '/legal-aid', icon: 'Help', svg: <><rect width="20" height="14" x="2" y="7" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></> },
+const NAV_LINKS = [
+    { path: '/dashboard', label: 'nav.dashboard', icon: '🏠' },
+    { path: '/chat', label: 'nav.chat', icon: '💬' },
+    { path: '/timeline', label: 'nav.timeline', icon: '📋' },
+    { path: '/complaint-generator', label: 'nav.complaint', icon: '📄' },
+    { path: '/notice-scanner', label: 'nav.notice', icon: '📜' },
+    { path: '/legal-aid', label: 'nav.legal_aid', icon: '🗺️' },
 ];
 
 export default function Navbar() {
     const navigate = useNavigate();
     const { pathname } = useLocation();
-    const { toggleLang, language } = useLanguage();
+    const { t, toggleLang, language } = useLanguage();
     const { handleLogoTap } = useStealth();
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     return (
-        <>
-            {/* Sleek Floating Dock Navigation (iOS Style) */}
-            <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-[95%] max-w-[400px]">
-                <div className="glass-panel p-2 rounded-full flex items-center justify-between shadow-[0_12px_40px_rgba(0,0,0,0.12)] border border-white/60">
+        <header className="sticky top-0 z-40 backdrop-blur-xl bg-white/80 border-b border-slate-200/60">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6">
+                <div className="flex items-center justify-between h-16">
 
-                    <button onClick={handleLogoTap} className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-xl shrink-0 transition-transform active:scale-90 relative overflow-hidden group ml-1">
-                        <div className="absolute inset-0 bg-gradient-to-tr from-brand-100 to-indigo-100 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <span className="relative drop-shadow-sm group-hover:scale-110 transition-transform">⚖️</span>
+                    {/* Logo */}
+                    <button onClick={handleLogoTap} className="flex items-center gap-2.5 group select-none">
+                        <div className="w-9 h-9 bg-gradient-to-tr from-brand-600 to-indigo-500 rounded-xl flex items-center justify-center text-sm shadow-[0_2px_8px_rgba(37,99,235,0.25)] group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                            <span className="drop-shadow-sm">⚖️</span>
+                        </div>
+                        <span className="text-lg font-bold font-display text-slate-800 tracking-tight hidden sm:inline">{t('app_name')}</span>
                     </button>
 
-                    <div className="flex-1 flex justify-evenly items-center px-1">
-                        {TABS.map(tab => {
-                            const active = pathname === tab.path || (tab.path === '/chat' && pathname.includes('chat'));
+                    {/* Desktop Nav Links */}
+                    <nav className="hidden md:flex items-center gap-1">
+                        {NAV_LINKS.map(link => {
+                            const active = pathname === link.path;
                             return (
                                 <button
-                                    key={tab.path}
-                                    onClick={() => navigate(tab.path)}
-                                    className="group relative flex flex-col items-center justify-center w-12 h-12"
+                                    key={link.path}
+                                    onClick={() => navigate(link.path)}
+                                    className={`px-3 py-2 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center gap-1.5
+                                        ${active
+                                            ? 'bg-brand-50 text-brand-700 shadow-sm'
+                                            : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                                        }`}
                                 >
-                                    <div className={`absolute inset-0 rounded-2xl transition-all duration-300 ${active ? 'bg-brand-500 scale-100' : 'bg-transparent scale-50 opacity-0 group-hover:bg-slate-100 group-hover:scale-100 group-hover:opacity-100'}`}></div>
-                                    <svg
-                                        className={`relative w-[22px] h-[22px] transition-all duration-300 ${active ? 'text-white' : 'text-slate-400'}`}
-                                        xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                                    >
-                                        {tab.svg}
-                                    </svg>
-                                    {/* Micro indicator */}
-                                    {active && <div className="absolute -bottom-1.5 w-1 h-1 bg-brand-500 rounded-full"></div>}
+                                    <span className="text-base">{link.icon}</span>
+                                    <span className="hidden lg:inline">{t(link.label)}</span>
                                 </button>
                             );
                         })}
+                    </nav>
+
+                    {/* Right side: Language + Logout */}
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={toggleLang}
+                            className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all ring-1 ring-black/5"
+                        >
+                            {language === 'en' ? 'हिंदी' : 'EN'}
+                        </button>
+
+                        <Link
+                            to="/"
+                            className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all"
+                        >
+                            {t('nav.logout')}
+                        </Link>
+
+                        {/* Mobile hamburger */}
+                        <button
+                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                            className="md:hidden w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
+                        >
+                            {mobileMenuOpen ? (
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                            ) : (
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" x2="21" y1="6" y2="6" /><line x1="3" x2="21" y1="12" y2="12" /><line x1="3" x2="21" y1="18" y2="18" /></svg>
+                            )}
+                        </button>
                     </div>
-
-                    {/* Subtle lang toggle on the right */}
-                    <button
-                        onClick={toggleLang}
-                        className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center shrink-0 font-bold text-sm tracking-wide text-slate-600 transition-all hover:bg-slate-100 active:scale-90 mr-1 ring-1 ring-black/5"
-                    >
-                        {language === 'en' ? 'हिं' : 'EN'}
-                    </button>
-
                 </div>
-            </nav>
-        </>
+
+                {/* Mobile Nav Dropdown */}
+                {mobileMenuOpen && (
+                    <div className="md:hidden pb-4 pt-2 border-t border-slate-100 animate-slide-up">
+                        <div className="grid grid-cols-3 gap-2">
+                            {NAV_LINKS.map(link => {
+                                const active = pathname === link.path;
+                                return (
+                                    <button
+                                        key={link.path}
+                                        onClick={() => { navigate(link.path); setMobileMenuOpen(false); }}
+                                        className={`flex flex-col items-center gap-1 p-3 rounded-xl text-xs font-semibold transition-all
+                                            ${active
+                                                ? 'bg-brand-50 text-brand-700'
+                                                : 'text-slate-500 hover:bg-slate-50'
+                                            }`}
+                                    >
+                                        <span className="text-xl">{link.icon}</span>
+                                        {t(link.label)}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </header>
     );
 }
