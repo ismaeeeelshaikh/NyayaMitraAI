@@ -1,0 +1,9 @@
+{
+    "BudgetName": "NyayaMitra-Monthly",
+    "BudgetLimit": {
+        "Amount": "25",
+        "Unit": "USD"
+    },
+    "TimeUnit": "MONTHLY",
+    "BudgetType": "COST"
+}
