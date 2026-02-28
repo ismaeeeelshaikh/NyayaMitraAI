@@ -3,7 +3,7 @@ import type { ChatMessage } from '../types';
 
 const WS_URL = import.meta.env.VITE_WEBSOCKET_URL;
 
-export function useWebSocket(sessionId: string) {
+export function useWebSocket(sessionId: string, onError?: (error: any) => void) {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [connected, setConnected] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -27,6 +27,7 @@ export function useWebSocket(sessionId: string) {
 
                 // Error / limit response
                 if (data.error || data.error_code) {
+                    if (onError) onError(data);
                     setMessages(prev => [...prev, {
                         id: Date.now().toString(),
                         sender: 'system',

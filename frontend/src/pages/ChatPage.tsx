@@ -1,4 +1,5 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useSession } from '../context/SessionContext';
 import { useWebSocket } from '../hooks/useWebSocket';
@@ -9,13 +10,22 @@ import ActionCard from '../components/chat/ActionCard';
 import GuestLimitBanner from '../components/shared/GuestLimitBanner';
 export default function ChatPage() {
     const { t, language } = useLanguage();
-    const { session, queriesLeft } = useSession();
+    const { session, setSession, queriesLeft } = useSession();
     const [input, setInput] = useState('');
     const [voiceMode, setVoiceMode] = useState(false);
     const bottomRef = useRef<HTMLDivElement>(null);
+    const navigate = useNavigate();
 
     const sid = session?.session_id || '';
-    const { messages, connected, loading, sendMessage } = useWebSocket(sid);
+
+    const handleWsError = useCallback((error: any) => {
+        if (error.error_code === 'SESSION_EXPIRED') {
+            setSession(null);
+            navigate('/');
+        }
+    }, [navigate, setSession]);
+
+    const { messages, connected, loading, sendMessage } = useWebSocket(sid, handleWsError);
     const { isRecording, isSpeaking, startRecording, stopRecording, speakText } = useVoice(sid, language);
 
     useEffect(() => {

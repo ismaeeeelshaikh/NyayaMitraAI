@@ -1,0 +1,14 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AllowLambdaInvoke",
+            "Effect": "Allow",
+            "Action": [
+                "lambda:InvokeFunction",
+                "lambda:InvokeAsync"
+            ],
+            "Resource": "arn:aws:lambda:ap-south-1:804078307105:function:nyaya-mitra-*"
+        }
+    ]
+}
