@@ -15,6 +15,7 @@ import json
 import os
 import uuid
 from datetime import datetime, timezone
+from decimal import Decimal
 
 s3       = boto3.client('s3', region_name='ap-south-1')
 lmb      = boto3.client('lambda', region_name='ap-south-1')
@@ -91,7 +92,7 @@ def handler(event, context):
         's3_document_url':    f's3://{UPLOADS_BUCKET}/{s3_key}',
         'processing_status':  'processing',
         'status':             'pending_analysis',
-        'file_size_kb':       round(len(file_bytes) / 1024, 1)
+        'file_size_kb':       Decimal(str(round(len(file_bytes) / 1024, 1)))
     })
 
     # Async analysis trigger

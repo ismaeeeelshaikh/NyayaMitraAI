@@ -1,0 +1,8 @@
+{
+    "body":  "{\"action\":\"sendMessage\",\"session_id\":\"e9fabc03-a9b0-4fc0-a7bd-d6833cef339a\",\"text\":\"hello test\",\"language\":\"en\",\"message_id\":\"test-123\"}",
+    "requestContext":  {
+                           "connectionId":  "testConnection",
+                           "stage":  "prod",
+                           "domainName":  "hrwvmujjdj.execute-api.ap-south-1.amazonaws.com"
+                       }
+}

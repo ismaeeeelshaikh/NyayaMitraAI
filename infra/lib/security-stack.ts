@@ -78,7 +78,7 @@ export class SecurityStack extends cdk.Stack {
             encryptionKey: this.kmsKey,
             generateSecretString: {
                 secretStringTemplate: JSON.stringify({
-                    bedrock_model_id: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
+                    bedrock_model_id: 'amazon.nova-pro-v1:0',
                     polly_voice_hi: 'Aditi',
                     polly_voice_en: 'Kajal',
                     ses_sender_email: 'noreply@nyayamitra.in',

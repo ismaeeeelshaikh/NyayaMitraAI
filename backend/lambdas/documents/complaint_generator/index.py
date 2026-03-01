@@ -27,7 +27,9 @@ bedrock  = boto3.client('bedrock-runtime', region_name='ap-south-1')
 dynamodb = boto3.resource('dynamodb', region_name='ap-south-1')
 s3       = boto3.client('s3', region_name='ap-south-1')
 
-MODEL_ID     = os.environ.get('BEDROCK_MODEL_ID', 'anthropic.claude-3-5-sonnet-20241022-v2:0')
+MODEL_ID     = os.environ.get('BEDROCK_MODEL_ID', 'apac.amazon.nova-pro-v1:0')
+if "claude" in MODEL_ID.lower():
+    MODEL_ID = 'apac.amazon.nova-pro-v1:0'
 TABLE_PREFIX = os.environ.get('TABLE_PREFIX', 'nyaya-mitra')
 DOCS_BUCKET  = os.environ.get('USER_DOCUMENTS_BUCKET', '')
 MAX_TOKENS   = int(os.environ.get('MAX_TOKENS_COMPLAINT', '700'))
@@ -170,18 +172,19 @@ def handler(event, context):
         today                  = datetime.now().strftime('%d %B %Y')
     )
 
-    # Bedrock call
+    # Bedrock call (Amazon Nova generic format)
     try:
         resp = bedrock.invoke_model(
             modelId=MODEL_ID,
             body=json.dumps({
-                'anthropic_version': 'bedrock-2023-05-31',
-                'max_tokens':        MAX_TOKENS,
-                'messages':          [{'role': 'user', 'content': prompt}],
-                'temperature':       0.2
+                "messages": [{"role": "user", "content": [{"text": prompt}]}],
+                "inferenceConfig": {
+                    "max_new_tokens": MAX_TOKENS,
+                    "temperature": 0.2
+                }
             })
         )
-        complaint_text = json.loads(resp['body'].read())['content'][0]['text'].strip()
+        complaint_text = json.loads(resp['body'].read())['output']['message']['content'][0]['text'].strip()
     except Exception as e:
         return {'statusCode': 500, 'headers': CORS, 'body': json.dumps({'error': f'AI error: {e}'})}
 
@@ -221,6 +224,8 @@ def handler(event, context):
         ExpiresIn=604800
     )
 
+    from decimal import Decimal
+
     # DynamoDB save
     now = datetime.now(timezone.utc)
     dynamodb.Table(f'{TABLE_PREFIX}-complaints').put_item(Item={
@@ -234,7 +239,7 @@ def handler(event, context):
         'pdf_s3_url':        f's3://{DOCS_BUCKET}/{s3_key}',
         'pdf_presigned_url': presigned_url,
         'timeline_id':       timeline_id,
-        'file_size_kb':      round(len(pdf_bytes) / 1024, 1)
+        'file_size_kb':      Decimal(str(round(len(pdf_bytes) / 1024, 1)))
     })
 
     return {

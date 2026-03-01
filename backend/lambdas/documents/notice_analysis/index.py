@@ -18,7 +18,9 @@ bedrock  = boto3.client('bedrock-runtime', region_name='ap-south-1')
 dynamodb = boto3.resource('dynamodb', region_name='ap-south-1')
 lmb      = boto3.client('lambda', region_name='ap-south-1')
 
-MODEL_ID     = os.environ.get('BEDROCK_MODEL_ID', 'anthropic.claude-3-5-sonnet-20241022-v2:0')
+MODEL_ID     = os.environ.get('BEDROCK_MODEL_ID', 'apac.amazon.nova-pro-v1:0')
+if "claude" in MODEL_ID.lower():
+    MODEL_ID = 'apac.amazon.nova-pro-v1:0'
 TABLE_PREFIX = os.environ.get('TABLE_PREFIX', 'nyaya-mitra')
 MAX_TOKENS   = int(os.environ.get('MAX_TOKENS_NOTICE', '700'))
 
@@ -150,18 +152,19 @@ def handler(event, context):
         )
         return
 
-    # ── Step 2: Bedrock Analysis ──
+    # ── Step 2: Bedrock Analysis (Amazon Nova format) ──
     try:
         resp = bedrock.invoke_model(
             modelId=MODEL_ID,
             body=json.dumps({
-                'anthropic_version': 'bedrock-2023-05-31',
-                'max_tokens':        MAX_TOKENS,
-                'messages':          [{'role': 'user', 'content': NOTICE_ANALYSIS_PROMPT.format(text=extracted_text[:5000])}],
-                'temperature':       0.1
+                "messages": [{"role": "user", "content": [{"text": NOTICE_ANALYSIS_PROMPT.format(text=extracted_text[:5000])}]}],
+                "inferenceConfig": {
+                    "max_new_tokens": MAX_TOKENS,
+                    "temperature": 0.1
+                }
             })
         )
-        raw = json.loads(resp['body'].read())['content'][0]['text']
+        raw = json.loads(resp['body'].read())['output']['message']['content'][0]['text']
         raw = raw.replace('```json', '').replace('```', '').strip()
         analysis = json.loads(raw)
     except json.JSONDecodeError:

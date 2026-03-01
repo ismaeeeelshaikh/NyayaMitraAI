@@ -90,9 +90,13 @@ def handler(event, context):
     language   = body.get('language', 'en')
     message_id = body.get('message_id', str(uuid.uuid4()))
 
+    print(f"DEBUG: Received WebSocket message. ConnectionId: {connection_id}, SessionID from body: '{session_id}'")
+
     # ── Validate session ──
     sessions_table = dynamodb.Table(f'{TABLE_PREFIX}-sessions')
     session = sessions_table.get_item(Key={'session_id': session_id}).get('Item')
+
+    print(f"DEBUG: Fetched session from DDB: {session is not None}")
 
     if not session:
         send_ws(apigw, connection_id, {

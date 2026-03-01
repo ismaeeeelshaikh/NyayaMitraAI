@@ -72,6 +72,20 @@ export default function NoticeScannerPage() {
 
     const reset = () => { if (pollRef.current) clearInterval(pollRef.current); setStatus('idle'); setAnalysis(null); };
 
+    let parsedActions: any[] = [];
+    if (analysis?.recommended_actions) {
+        if (typeof analysis.recommended_actions === 'string') {
+            try {
+                const parsed = JSON.parse(analysis.recommended_actions);
+                parsedActions = Array.isArray(parsed) ? parsed : [{ action: analysis.recommended_actions, reason: '' }];
+            } catch {
+                parsedActions = [{ action: analysis.recommended_actions, reason: '' }];
+            }
+        } else if (Array.isArray(analysis.recommended_actions)) {
+            parsedActions = analysis.recommended_actions;
+        }
+    }
+
     return (
         <div className="p-4 sm:p-8 max-w-3xl mx-auto pb-32 space-y-8 animate-fade-in relative z-10">
 
@@ -155,22 +169,24 @@ export default function NoticeScannerPage() {
                     )}
 
                     {/* AI Recommended Guidance */}
-                    {analysis.recommended_actions && (
-                        <div className="pt-4 mt-6 border-t border-slate-100">
-                            <h3 className="font-bold text-brand-700 text-lg mb-4 flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg> Suggested Actions</h3>
-                            <div className="bg-brand-50 p-6 rounded-[2rem]">
-                                {typeof analysis.recommended_actions === 'string' ? (
-                                    <p className="text-slate-700">{analysis.recommended_actions}</p>
-                                ) : (
-                                    <ul className="space-y-4">
-                                        {((analysis.recommended_actions as unknown) as any[]).map((a, i) => (
-                                            <li key={i}>
-                                                <div className="font-bold text-slate-800">{a.action}</div>
-                                                <div className="text-sm text-slate-500">{a.reason}</div>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
+                    {parsedActions.length > 0 && (
+                        <div className="pt-4 mt-8 border-t border-slate-100">
+                            <h3 className="font-bold text-slate-800 text-xl mb-5 flex items-center gap-2"><span className="text-brand-500"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg></span> Suggested Actions</h3>
+                            <div className="grid gap-4 sm:grid-cols-2">
+                                {parsedActions.map((a, i) => (
+                                    <div key={i} className="bg-white border border-slate-200 rounded-3xl p-5 hover:border-brand-300 hover:shadow-glass transition-all group">
+                                        {a.priority && (
+                                            <span className={`inline-block px-3 py-1 text-[10px] font-black tracking-widest uppercase rounded-full mb-3 ${a.priority.includes('HIGH') || a.priority.includes('CRITICAL') ? 'bg-red-50 text-red-600' :
+                                                a.priority.includes('IMMEDIATE') ? 'bg-orange-50 text-orange-600' :
+                                                    'bg-brand-50 text-brand-600'
+                                                }`}>
+                                                {a.priority.replace(/_/g, ' ')}
+                                            </span>
+                                        )}
+                                        <div className="font-bold text-slate-800 text-base leading-snug mb-2 group-hover:text-brand-700 transition-colors">{a.action}</div>
+                                        {a.reason && <div className="text-sm text-slate-500 font-medium leading-relaxed">{a.reason}</div>}
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     )}

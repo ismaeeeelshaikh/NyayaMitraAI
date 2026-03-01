@@ -12,7 +12,9 @@ import os
 bedrock  = boto3.client('bedrock-runtime', region_name='ap-south-1')
 dynamodb = boto3.resource('dynamodb')
 
-MODEL_ID     = os.environ.get('BEDROCK_MODEL_ID', 'anthropic.claude-3-5-sonnet-20241022-v2:0')
+MODEL_ID     = os.environ.get('BEDROCK_MODEL_ID', 'apac.amazon.nova-pro-v1:0')
+if "claude" in MODEL_ID.lower():
+    MODEL_ID = 'apac.amazon.nova-pro-v1:0'
 TABLE_PREFIX = os.environ.get('TABLE_PREFIX', 'nyaya-mitra')
 
 EXTRACT_PROMPT = """Extract legal case facts from this conversation.
@@ -69,14 +71,15 @@ def handler(event, context):
     resp = bedrock.invoke_model(
         modelId=MODEL_ID,
         body=json.dumps({
-            'anthropic_version': 'bedrock-2023-05-31',
-            'max_tokens':        600,   # Cost control
-            'messages':          [{'role': 'user', 'content': EXTRACT_PROMPT.format(conversation=conversation)}],
-            'temperature':       0.1
+            "messages": [{"role": "user", "content": [{"text": EXTRACT_PROMPT.format(conversation=conversation)}]}],
+            "inferenceConfig": {
+                "max_new_tokens": 600,
+                "temperature": 0.1
+            }
         })
     )
 
-    raw = json.loads(resp['body'].read())['content'][0]['text']
+    raw = json.loads(resp['body'].read())['output']['message']['content'][0]['text']
     raw = raw.replace('```json', '').replace('```', '').strip()
 
     try:

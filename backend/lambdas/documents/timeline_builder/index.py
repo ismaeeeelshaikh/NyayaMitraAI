@@ -20,7 +20,9 @@ from datetime import datetime, timezone
 bedrock  = boto3.client('bedrock-runtime', region_name='ap-south-1')
 dynamodb = boto3.resource('dynamodb', region_name='ap-south-1')
 
-MODEL_ID     = os.environ.get('BEDROCK_MODEL_ID', 'anthropic.claude-3-5-sonnet-20241022-v2:0')
+MODEL_ID     = os.environ.get('BEDROCK_MODEL_ID', 'apac.amazon.nova-pro-v1:0')
+if "claude" in MODEL_ID.lower():
+    MODEL_ID = 'apac.amazon.nova-pro-v1:0'
 TABLE_PREFIX = os.environ.get('TABLE_PREFIX', 'nyaya-mitra')
 MAX_TOKENS   = int(os.environ.get('MAX_TOKENS_TIMELINE', '800'))
 
@@ -66,7 +68,7 @@ def handler(event, context):
     except Exception:
         return {'statusCode': 400, 'headers': CORS, 'body': json.dumps({'error': 'Invalid JSON'})}
 
-    narrative  = body.get('narrative_text', '').strip()
+    narrative  = body.get('text', body.get('narrative_text', '')).strip()
     session_id = body.get('session_id', '')
     user_id    = body.get('user_id', 'unknown')
 
@@ -77,18 +79,19 @@ def handler(event, context):
             'body': json.dumps({'error': 'Please provide more details about your situation (at least 30 characters)'})
         }
 
-    # Bedrock call karo
+    # Bedrock call karo (Amazon Nova generic format)
     try:
         resp = bedrock.invoke_model(
             modelId=MODEL_ID,
             body=json.dumps({
-                'anthropic_version': 'bedrock-2023-05-31',
-                'max_tokens':        MAX_TOKENS,
-                'messages':          [{'role': 'user', 'content': TIMELINE_PROMPT.format(narrative=narrative[:4000])}],
-                'temperature':       0.1
+                "messages": [{"role": "user", "content": [{"text": TIMELINE_PROMPT.format(narrative=narrative[:4000])}]}],
+                "inferenceConfig": {
+                    "max_new_tokens": MAX_TOKENS,
+                    "temperature": 0.1
+                }
             })
         )
-        raw = json.loads(resp['body'].read())['content'][0]['text']
+        raw = json.loads(resp['body'].read())['output']['message']['content'][0]['text']
         raw = raw.replace('```json', '').replace('```', '').strip()
         extracted = json.loads(raw)
     except json.JSONDecodeError as e:

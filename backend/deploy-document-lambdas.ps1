@@ -20,7 +20,8 @@ try {
     $identity = $identityJson | ConvertFrom-Json
     $ACCOUNT_ID = $identity.Account
     Write-Host "  Account: $ACCOUNT_ID" -ForegroundColor Green
-} catch {
+}
+catch {
     Write-Host "  ERROR: AWS credentials not configured!" -ForegroundColor Red
     exit 1
 }
@@ -32,17 +33,17 @@ $LAMBDA_ROLE_ARN = "arn:aws:iam::${ACCOUNT_ID}:role/$LAMBDA_ROLE_NAME"
 $envJsonPath = Join-Path $env:TEMP "lambda-env-m3.json"
 $envObj = @{
     Variables = @{
-        TABLE_PREFIX = $TABLE_PREFIX
-        BEDROCK_MODEL_ID = "anthropic.claude-3-5-sonnet-20241022-v2:0"
-        USER_UPLOADS_BUCKET = "nyaya-mitra-user-uploads-$ACCOUNT_ID"
+        TABLE_PREFIX          = $TABLE_PREFIX
+        BEDROCK_MODEL_ID      = "amazon.nova-pro-v1:0"
+        USER_UPLOADS_BUCKET   = "nyaya-mitra-user-uploads-$ACCOUNT_ID"
         USER_DOCUMENTS_BUCKET = "nyaya-mitra-user-documents-$ACCOUNT_ID"
-        TEMPLATES_BUCKET = "nyaya-mitra-templates-$ACCOUNT_ID"
-        SES_SENDER_EMAIL = "noreply@nyayamitra.in"
-        ESCALATION_TOPIC_ARN = ""
-        MAX_TOKENS_TIMELINE = "800"
-        MAX_TOKENS_COMPLAINT = "700"
-        MAX_TOKENS_NOTICE = "700"
-        GUEST_QUERY_LIMIT = "5"
+        TEMPLATES_BUCKET      = "nyaya-mitra-templates-$ACCOUNT_ID"
+        SES_SENDER_EMAIL      = "noreply@nyayamitra.in"
+        ESCALATION_TOPIC_ARN  = ""
+        MAX_TOKENS_TIMELINE   = "800"
+        MAX_TOKENS_COMPLAINT  = "700"
+        MAX_TOKENS_NOTICE     = "700"
+        GUEST_QUERY_LIMIT     = "5"
     }
 }
 $envObj | ConvertTo-Json -Compress | Out-File -FilePath $envJsonPath -Encoding ascii
@@ -61,15 +62,15 @@ Remove-Item $dummyZip -ErrorAction SilentlyContinue
 Compress-Archive -Path "$dummyDir\*" -DestinationPath $dummyZip -Force
 
 $functions = @(
-    @("nyaya-mitra-timeline-builder",     "60",  "256"),
-    @("nyaya-mitra-timeline-pdf",         "60",  "512"),
-    @("nyaya-mitra-complaint-generator",  "90",  "512"),
-    @("nyaya-mitra-complaint-delivery",   "30",  "256"),
-    @("nyaya-mitra-notice-scanner",       "30",  "256"),
-    @("nyaya-mitra-notice-analysis",      "300", "512"),
-    @("nyaya-mitra-deadline-reminder",    "30",  "128"),
-    @("nyaya-mitra-legal-aid-escalator",  "30",  "256"),
-    @("nyaya-mitra-dashboard-widgets",    "15",  "128")
+    @("nyaya-mitra-timeline-builder", "60", "256"),
+    @("nyaya-mitra-timeline-pdf", "60", "512"),
+    @("nyaya-mitra-complaint-generator", "90", "512"),
+    @("nyaya-mitra-complaint-delivery", "30", "256"),
+    @("nyaya-mitra-notice-scanner", "30", "256"),
+    @("nyaya-mitra-notice-analysis", "300", "512"),
+    @("nyaya-mitra-deadline-reminder", "30", "128"),
+    @("nyaya-mitra-legal-aid-escalator", "30", "256"),
+    @("nyaya-mitra-dashboard-widgets", "15", "128")
 )
 
 foreach ($fn in $functions) {
@@ -80,11 +81,13 @@ foreach ($fn in $functions) {
     aws lambda get-function --function-name $fnName --region $REGION 2>$null | Out-Null
     if ($LASTEXITCODE -eq 0) {
         Write-Host "  $fnName (exists)" -ForegroundColor DarkGray
-    } else {
+    }
+    else {
         aws lambda create-function --function-name $fnName --runtime python3.11 --role $LAMBDA_ROLE_ARN --handler "index.handler" --zip-file "fileb://$dummyZip" --timeout $fnTimeout --memory-size $fnMemory --region $REGION --environment "file://$envJsonPath" --output text --query FunctionName 2>$null | Out-Null
         if ($LASTEXITCODE -eq 0) {
             Write-Host "  $fnName CREATED" -ForegroundColor Green
-        } else {
+        }
+        else {
             Write-Host "  $fnName ERROR" -ForegroundColor Red
         }
     }
@@ -129,7 +132,8 @@ if ($PDF_LAYER_ARN) {
         aws lambda update-function-configuration --function-name $fnName --layers $PDF_LAYER_ARN --region $REGION --output text --query FunctionName 2>$null | Out-Null
         Write-Host "  Layer attached to $fnName" -ForegroundColor Green
     }
-} else {
+}
+else {
     Write-Host "  PDF Layer deploy failed (non-fatal for demo)" -ForegroundColor DarkGray
 }
 
@@ -143,15 +147,15 @@ Write-Host "[3/4] Deploying actual code to Lambda functions..." -ForegroundColor
 $lambdasDir = Join-Path $scriptDir "lambdas"
 
 $deployMap = @(
-    @("nyaya-mitra-timeline-builder",     "documents\timeline_builder"),
-    @("nyaya-mitra-timeline-pdf",         "documents\timeline_pdf_generator"),
-    @("nyaya-mitra-complaint-generator",  "documents\complaint_generator"),
-    @("nyaya-mitra-complaint-delivery",   "documents\complaint_delivery"),
-    @("nyaya-mitra-notice-scanner",       "documents\notice_scanner"),
-    @("nyaya-mitra-notice-analysis",      "documents\notice_analysis"),
-    @("nyaya-mitra-deadline-reminder",    "documents\deadline_reminder"),
-    @("nyaya-mitra-legal-aid-escalator",  "documents\legal_aid_escalator"),
-    @("nyaya-mitra-dashboard-widgets",    "documents\dashboard_widgets")
+    @("nyaya-mitra-timeline-builder", "documents\timeline_builder"),
+    @("nyaya-mitra-timeline-pdf", "documents\timeline_pdf_generator"),
+    @("nyaya-mitra-complaint-generator", "documents\complaint_generator"),
+    @("nyaya-mitra-complaint-delivery", "documents\complaint_delivery"),
+    @("nyaya-mitra-notice-scanner", "documents\notice_scanner"),
+    @("nyaya-mitra-notice-analysis", "documents\notice_analysis"),
+    @("nyaya-mitra-deadline-reminder", "documents\deadline_reminder"),
+    @("nyaya-mitra-legal-aid-escalator", "documents\legal_aid_escalator"),
+    @("nyaya-mitra-dashboard-widgets", "documents\dashboard_widgets")
 )
 
 foreach ($item in $deployMap) {
@@ -172,7 +176,8 @@ foreach ($item in $deployMap) {
     aws lambda update-function-code --function-name $fnName --zip-file "fileb://$zipPath" --region $REGION --output text --query FunctionName 2>$null | Out-Null
     if ($LASTEXITCODE -eq 0) {
         Write-Host "  $fnName DEPLOYED" -ForegroundColor Green
-    } else {
+    }
+    else {
         Write-Host "  $fnName DEPLOY FAILED" -ForegroundColor Red
     }
 

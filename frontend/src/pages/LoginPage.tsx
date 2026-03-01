@@ -44,16 +44,7 @@ export default function LoginPage() {
             setSession(data);
             navigate('/dashboard');
         } catch {
-            setSession({
-                session_id: `guest_${Date.now()}`,
-                user_id: `guest_${Date.now().toString(36)}`,
-                language: language,
-                anonymous_mode: true,
-                stealth_mode: false,
-                queries_count: 0,
-                query_limit_remaining: 5,
-            });
-            navigate('/dashboard');
+            setError(t('common.error'));
         } finally {
             setLoading(false);
         }
@@ -62,16 +53,16 @@ export default function LoginPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true); setError('');
+        // Real implementation: Call Cognito auth, get token, then request a session
+        // For now, we simulate success by requesting a registered user session directly
         try {
-            setSession({
-                session_id: `user_${Date.now()}`,
-                user_id: email,
-                language: language,
+            const { data } = await axios.post(`${API}/v1/entry/session`, {
+                language_code: language,
+                mode_selection: 'chat',
                 anonymous_mode: false,
-                stealth_mode: false,
-                queries_count: 0,
-                query_limit_remaining: 999,
+                user_id: email, // Passing email as user_id for now
             });
+            setSession(data);
             navigate('/dashboard');
         } catch {
             setError(t('common.error'));

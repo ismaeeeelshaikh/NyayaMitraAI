@@ -18,7 +18,9 @@ import re
 bedrock = boto3.client('bedrock-runtime', region_name='ap-south-1')
 dynamodb = boto3.resource('dynamodb')
 
-MODEL_ID     = os.environ.get('BEDROCK_MODEL_ID', 'anthropic.claude-3-5-sonnet-20241022-v2:0')
+MODEL_ID     = os.environ.get('BEDROCK_MODEL_ID', 'apac.amazon.nova-pro-v1:0')
+if "claude" in MODEL_ID.lower():
+    MODEL_ID = 'apac.amazon.nova-pro-v1:0'
 TABLE_PREFIX = os.environ.get('TABLE_PREFIX', 'nyaya-mitra')
 MAX_TOKENS   = int(os.environ.get('MAX_TOKENS_CHAT', '500'))
 
@@ -115,20 +117,21 @@ def handler(event, context):
         query=query
     )
 
-    # ── Bedrock call ──
+    # ── Bedrock call (Amazon Nova generic format) ──
     resp = bedrock.invoke_model(
         modelId=MODEL_ID,
         body=json.dumps({
-            'anthropic_version': 'bedrock-2023-05-31',
-            'max_tokens':        MAX_TOKENS,   # Cost control: 500 tokens
-            'messages':          [{'role': 'user', 'content': prompt}],
-            'temperature':       0.1,          # Consistent, factual answers
-            'top_p':             0.9
+            "messages": [{"role": "user", "content": [{"text": prompt}]}],
+            "inferenceConfig": {
+                "max_new_tokens": MAX_TOKENS,
+                "temperature": 0.1,
+                "top_p": 0.9
+            }
         })
     )
 
     body   = json.loads(resp['body'].read())
-    answer = body['content'][0]['text'].strip()
+    answer = body['output']['message']['content'][0]['text'].strip()
 
     # ── Extract cited document indices ──
     # "[Document 0]" ya "[दस्तावेज़ 1]" patterns dhundho

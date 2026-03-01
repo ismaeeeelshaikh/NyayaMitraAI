@@ -22,7 +22,8 @@ try {
     $ACCOUNT_ID = $identity.Account
     Write-Host "  Account: $ACCOUNT_ID" -ForegroundColor Green
     Write-Host "  User: $($identity.Arn)" -ForegroundColor Green
-} catch {
+}
+catch {
     Write-Host "  ERROR: AWS credentials not configured!" -ForegroundColor Red
     Write-Host "  Run: aws configure" -ForegroundColor Red
     exit 1
@@ -34,7 +35,7 @@ $USER_UPLOADS_BUCKET = "nyaya-mitra-user-uploads-$ACCOUNT_ID"
 $USER_DOCUMENTS_BUCKET = "nyaya-mitra-user-documents-$ACCOUNT_ID"
 $FRONTEND_BUCKET = "nyaya-mitra-frontend-$ACCOUNT_ID"
 $TEMPLATES_BUCKET = "nyaya-mitra-templates-$ACCOUNT_ID"
-$BEDROCK_MODEL_ID = "anthropic.claude-3-5-sonnet-20241022-v2:0"
+$BEDROCK_MODEL_ID = "amazon.nova-pro-v1:0"
 $POLLY_VOICE_HI = "Aditi"
 $POLLY_VOICE_EN = "Kajal"
 $LAMBDA_ROLE_NAME = "nyaya-mitra-lambda-role"
@@ -53,11 +54,13 @@ foreach ($bucket in $buckets) {
     aws s3api head-bucket --bucket $bucket 2>$null
     if ($LASTEXITCODE -eq 0) {
         Write-Host "  $bucket (already exists)" -ForegroundColor DarkGray
-    } else {
+    }
+    else {
         aws s3api create-bucket --bucket $bucket --region $REGION --create-bucket-configuration LocationConstraint=$REGION --output text 2>$null
         if ($LASTEXITCODE -eq 0) {
             Write-Host "  $bucket CREATED" -ForegroundColor Green
-        } else {
+        }
+        else {
             Write-Host "  $bucket (could not create - may already exist)" -ForegroundColor DarkGray
         }
     }
@@ -126,9 +129,9 @@ Start-Sleep -Seconds 10
 
 # Enable TTL on relevant tables
 $ttlTables = @{
-    "$TABLE_PREFIX-sessions" = "ttl"
+    "$TABLE_PREFIX-sessions"     = "ttl"
     "$TABLE_PREFIX-chat-history" = "ttl"
-    "$TABLE_PREFIX-connections" = "ttl"
+    "$TABLE_PREFIX-connections"  = "ttl"
 }
 
 foreach ($tbl in $ttlTables.Keys) {
@@ -155,7 +158,8 @@ function Add-SimpleGSI {
     if ($LASTEXITCODE -eq 0) {
         Write-Host "  $TName / $IName ADDED" -ForegroundColor Green
         Start-Sleep -Seconds 5
-    } else {
+    }
+    else {
         Write-Host "  $TName / $IName (exists or error)" -ForegroundColor DarkGray
     }
 }
@@ -170,7 +174,8 @@ function Add-CompositeGSI {
     if ($LASTEXITCODE -eq 0) {
         Write-Host "  $TName / $IName ADDED" -ForegroundColor Green
         Start-Sleep -Seconds 5
-    } else {
+    }
+    else {
         Write-Host "  $TName / $IName (exists or error)" -ForegroundColor DarkGray
     }
 }
@@ -211,7 +216,8 @@ $trustPolicyPath = Join-Path $env:TEMP "trust-policy.json"
 aws iam get-role --role-name $LAMBDA_ROLE_NAME 2>$null | Out-Null
 if ($LASTEXITCODE -eq 0) {
     Write-Host "  Role $LAMBDA_ROLE_NAME already exists" -ForegroundColor DarkGray
-} else {
+}
+else {
     aws iam create-role --role-name $LAMBDA_ROLE_NAME --assume-role-policy-document "file://$trustPolicyPath" --description "Shared role for Nyaya Mitra Lambda" --output text 2>$null | Out-Null
     Write-Host "  Role CREATED" -ForegroundColor Green
     Start-Sleep -Seconds 5
@@ -258,7 +264,8 @@ Write-Host "[5/8] Creating SNS Escalation Topic..." -ForegroundColor Yellow
 $ESCALATION_TOPIC_ARN = aws sns create-topic --name "nyaya-mitra-escalation-alerts" --region $REGION --output text --query TopicArn 2>$null
 if ($ESCALATION_TOPIC_ARN) {
     Write-Host "  Topic: $ESCALATION_TOPIC_ARN" -ForegroundColor Green
-} else {
+}
+else {
     $ESCALATION_TOPIC_ARN = ""
     Write-Host "  SNS Topic error (non-fatal)" -ForegroundColor DarkGray
 }
@@ -273,16 +280,16 @@ Write-Host "[6/8] Creating 14 Lambda Functions..." -ForegroundColor Yellow
 $envJsonPath = Join-Path $env:TEMP "lambda-env.json"
 $envObj = @{
     Variables = @{
-        TABLE_PREFIX = $TABLE_PREFIX
-        LEGAL_CORPUS_BUCKET = $LEGAL_CORPUS_BUCKET
-        USER_UPLOADS_BUCKET = $USER_UPLOADS_BUCKET
+        TABLE_PREFIX          = $TABLE_PREFIX
+        LEGAL_CORPUS_BUCKET   = $LEGAL_CORPUS_BUCKET
+        USER_UPLOADS_BUCKET   = $USER_UPLOADS_BUCKET
         USER_DOCUMENTS_BUCKET = $USER_DOCUMENTS_BUCKET
-        BEDROCK_MODEL_ID = $BEDROCK_MODEL_ID
-        POLLY_VOICE_HI = $POLLY_VOICE_HI
-        POLLY_VOICE_EN = $POLLY_VOICE_EN
-        ESCALATION_TOPIC_ARN = "$ESCALATION_TOPIC_ARN"
-        GUEST_QUERY_LIMIT = "5"
-        MAX_TOKENS_CHAT = "500"
+        BEDROCK_MODEL_ID      = $BEDROCK_MODEL_ID
+        POLLY_VOICE_HI        = $POLLY_VOICE_HI
+        POLLY_VOICE_EN        = $POLLY_VOICE_EN
+        ESCALATION_TOPIC_ARN  = "$ESCALATION_TOPIC_ARN"
+        GUEST_QUERY_LIMIT     = "5"
+        MAX_TOKENS_CHAT       = "500"
     }
 }
 $envObj | ConvertTo-Json -Compress | Out-File -FilePath $envJsonPath -Encoding ascii
@@ -320,11 +327,13 @@ foreach ($fn in $functions) {
     aws lambda get-function --function-name $fnName --region $REGION 2>$null | Out-Null
     if ($LASTEXITCODE -eq 0) {
         Write-Host "  $fnName (exists)" -ForegroundColor DarkGray
-    } else {
+    }
+    else {
         aws lambda create-function --function-name $fnName --runtime python3.11 --role $LAMBDA_ROLE_ARN --handler "index.handler" --zip-file "fileb://$dummyZip" --timeout $fnTimeout --memory-size $fnMemory --region $REGION --environment "file://$envJsonPath" --output text --query FunctionName 2>$null | Out-Null
         if ($LASTEXITCODE -eq 0) {
             Write-Host "  $fnName CREATED" -ForegroundColor Green
-        } else {
+        }
+        else {
             Write-Host "  $fnName ERROR" -ForegroundColor Red
         }
     }
@@ -380,7 +389,8 @@ foreach ($item in $deployMap) {
     aws lambda update-function-code --function-name $fnName --zip-file "fileb://$zipPath" --region $REGION --output text --query FunctionName 2>$null | Out-Null
     if ($LASTEXITCODE -eq 0) {
         Write-Host "  $fnName DEPLOYED" -ForegroundColor Green
-    } else {
+    }
+    else {
         Write-Host "  $fnName DEPLOY FAILED" -ForegroundColor Red
     }
 
@@ -402,7 +412,8 @@ if (Test-Path $legalDocsDir) {
         aws s3 cp $doc.FullName "s3://$LEGAL_CORPUS_BUCKET/corpus/$($doc.Name)" --region $REGION 2>$null | Out-Null
         Write-Host "  Uploaded: corpus/$($doc.Name)" -ForegroundColor Green
     }
-} else {
+}
+else {
     Write-Host "  legal-docs folder not found" -ForegroundColor DarkGray
 }
 
@@ -412,7 +423,8 @@ if (Test-Path $seedScript) {
     $env:AWS_DEFAULT_REGION = $REGION
     python $seedScript 2>$null
     Write-Host "  Seed data loaded!" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "  seed-data.py not found" -ForegroundColor DarkGray
 }
 
