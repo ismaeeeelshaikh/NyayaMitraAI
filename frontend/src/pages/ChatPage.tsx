@@ -93,7 +93,7 @@ function ConstellationParticles() {
 }
 
 export default function ChatPage() {
-    const { t, language } = useLanguage();
+    const { language } = useLanguage();
     const { session, setSession, queriesLeft } = useSession(); // queriesLeft dynamic hai context se
     const [input, setInput] = useState('');
     const [voiceMode, setVoiceMode] = useState(false);

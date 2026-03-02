@@ -76,7 +76,7 @@ function ConstellationParticles() {
    MAIN SCANNER PAGE
    ═══════════════════════════════════════════════════════════ */
 export default function NoticeScannerPage() {
-    const { t, language } = useLanguage();
+    const { language } = useLanguage();
     const { session } = useSession();
     const inputRef = useRef<HTMLInputElement>(null);
 
