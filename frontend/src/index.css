@@ -2,43 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  * { 
-    box-sizing: border-box; 
-    -webkit-tap-highlight-color: transparent;
-  }
-  
-  body { 
-    font-family: 'Inter', system-ui, sans-serif; 
-    background-color: #f8fafc;
-    background-image: 
-      radial-gradient(at 0% 0%, hsla(217, 100%, 75%, 0.15) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, hsla(256, 100%, 75%, 0.15) 0px, transparent 50%);
-    background-attachment: fixed;
-  }
-  
-  h1, h2, h3, h4, h5, h6, .font-display {
-    font-family: 'Outfit', system-ui, sans-serif;
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-accent to-brand-light;
   }
 
-  .font-hindi *, .font-hindi { 
-    font-family: 'Noto Sans Devanagari', 'Inter', sans-serif !important; 
+  .glass-panel {
+    @apply bg-brand-surface/60 hover:bg-brand-surface/90 backdrop-blur-xl border border-brand-border shadow-glass transition-all duration-500;
   }
 }
 
-@layer utilities {
-  .scrollbar-hide::-webkit-scrollbar { display: none; }
-  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-  
-  .glass-panel {
-    @apply bg-white/70 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_rgba(0,0,0,0.04)];
-  }
-  
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-indigo-600;
-  }
+body {
+  @apply bg-brand-bg text-white antialiased font-sans;
+  overflow-x: hidden;
+}
 
-  .safe-bottom {
-    padding-bottom: env(safe-area-inset-bottom, 20px);
-  }
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-brand-bg;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-brand-surface border border-brand-border rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-brand-accent;
 }
