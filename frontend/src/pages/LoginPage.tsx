@@ -311,20 +311,18 @@ export default function LoginPage() {
         { icon: '📋', en: 'RTI', hi: 'RTI' },
     ];
 
-    const emailLabel = language === 'en' ? 'Email' : 'à¤ˆà¤®à¥‡à¤²';
+    const emailLabel = language === 'en' ? 'Email' : 'ईमेल';
     const emailPlaceholder = 'email@example.com';
-    const confirmPasswordLabel = language === 'en' ? 'Confirm Password' : 'à¤ªà¤¾à¤¸à¤µà¤°à¥à¤¡ à¤¦à¥‹à¤¬à¤¾à¤°à¤¾ à¤¡à¤¾à¤²à¥‡à¤‚';
-    const forgotPasswordLabel = language === 'en' ? 'Forgot Password?' : 'à¤ªà¤¾à¤¸à¤µà¤°à¥à¤¡ à¤­à¥‚à¤² à¤—à¤?';
-    const backToSignInLabel = language === 'en' ? 'Back to Sign In' : 'à¤µà¤¾à¤ªà¤¸ à¤¸à¤¾à¤‡à¤¨ à¤‡à¤¨ à¤ªà¤° à¤œà¤¾à¤à¤‚';
-    const resetCodeLabel = language === 'en' ? 'Reset Code' : 'à¤°à¥€à¤¸à¥‡à¤Ÿ à¤•à¥‹à¤¡';
-    const sendResetCodeLabel = language === 'en' ? 'Send Reset Code' : 'à¤°à¥€à¤¸à¥‡à¤Ÿ à¤•à¥‹à¤¡ à¤­à¥‡à¤œà¥‡à¤‚';
-    const resetPasswordLabel = language === 'en' ? 'Reset Password' : 'à¤ªà¤¾à¤¸à¤µà¤°à¥à¤¡ à¤°à¥€à¤¸à¥‡à¤Ÿ à¤•à¤°à¥‡à¤‚';
-    const newPasswordLabel = language === 'en' ? 'New Password' : 'à¤¨à¤¯à¤¾ à¤ªà¤¾à¤¸à¤µà¤°à¥à¤¡';
+    const confirmPasswordLabel = language === 'en' ? 'Confirm Password' : 'पासवर्ड दोबारा डालें';
+    const forgotPasswordLabel = language === 'en' ? 'Forgot Password?' : 'पासवर्ड भूल गए?';
+    const backToSignInLabel = language === 'en' ? 'Back to Sign In' : 'वापस साइन इन पर जाएं';
+    const resetCodeLabel = language === 'en' ? 'Reset Code' : 'रीसेट कोड';
+    const sendResetCodeLabel = language === 'en' ? 'Send Reset Code' : 'रीसेट कोड भेजें';
+    const resetPasswordLabel = language === 'en' ? 'Reset Password' : 'पासवर्ड रीसेट करें';
+    const newPasswordLabel = language === 'en' ? 'New Password' : 'नया पासवर्ड';
 
     return (
         <div className="min-h-screen bg-[#050505] text-white flex relative overflow-hidden font-sans selection:bg-[#E87D20]/30 selection:text-white">
-
-            {/* ═══ Background Animations ═══ */}
             <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#121827] via-[#050505] to-[#050505] pointer-events-none z-0"></div>
             <ConstellationParticles />
             <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-[#E87D20]/20 rounded-full mix-blend-screen filter blur-[100px] opacity-40 animate-pulse-slow pointer-events-none z-0"></div>
@@ -704,6 +702,6 @@ export default function LoginPage() {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
