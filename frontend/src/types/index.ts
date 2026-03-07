@@ -17,6 +17,7 @@ export interface ChatMessage {
     sender: 'user' | 'assistant' | 'system';
     text: string;
     timestamp: string;
+    isStreaming?: boolean;
     confidence_score?: number;
     confidence_label?: string;
     confidence_color?: 'green' | 'teal' | 'yellow' | 'orange';

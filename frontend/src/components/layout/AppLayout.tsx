@@ -5,9 +5,9 @@ import CrisisButton from '../shared/CrisisButton';
 
 export default function AppLayout() {
     return (
-        <div className="min-h-screen bg-surface-50 text-slate-800 flex flex-col font-sans antialiased">
+        <div className="min-h-screen h-screen bg-surface-50 text-slate-800 flex flex-col font-sans antialiased overflow-hidden">
             <Navbar />
-            <main className="flex-1 w-full relative">
+            <main className="flex-1 w-full relative min-h-0 overflow-hidden">
                 <Outlet />
             </main>
             <Footer />

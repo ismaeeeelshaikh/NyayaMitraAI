@@ -3,11 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useSession } from '../context/SessionContext';
 import { useWebSocket } from '../hooks/useWebSocket';
+import type { WebSocketPayload } from '../hooks/useWebSocket';
+import { useConversations } from '../hooks/useConversations';
 import { useVoice } from '../hooks/useVoice';
 import ConfidenceBadge from '../components/chat/ConfidenceBadge';
 import RiskBadge from '../components/chat/RiskBadge';
 import ActionCard from '../components/chat/ActionCard';
 import GuestLimitBanner from '../components/shared/GuestLimitBanner';
+import StreamingBubble from '../components/chat/StreamingBubble';
 
 /* ═══════════════════════════════════════════════════════════
    CONSTELLATION PARTICLES (Original Shared Theme)
@@ -94,28 +97,112 @@ function ConstellationParticles() {
 
 export default function ChatPage() {
     const { language } = useLanguage();
-    const { session, setSession, queriesLeft } = useSession(); // queriesLeft dynamic hai context se
+    const { session, setSession, queriesLeft } = useSession();
     const [input, setInput] = useState('');
     const [voiceMode, setVoiceMode] = useState(false);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true); // Sidebar toggle state
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const bottomRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
 
     const sid = session?.session_id || '';
 
-    const handleWsError = useCallback((error: any) => {
+    // ── Conversation history management ──
+    const {
+        conversations,
+        activeId,
+        activeConversation,
+        saveMessages,
+        saveBeforeSwitch,
+        createConversation,
+        switchConversation,
+        deleteConversation,
+        isSwitchingRef,
+    } = useConversations(sid);
+
+    const handleWsError = useCallback((error: WebSocketPayload) => {
         if (error.error_code === 'SESSION_EXPIRED') {
             setSession(null);
             navigate('/');
         }
+
+        if (error.error_code === 'GUEST_LIMIT_REACHED') {
+            setSession(prev => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    query_limit_remaining: 0,
+                    queries_count: typeof error.queries_used === 'number' ? error.queries_used : prev.queries_count,
+                };
+            });
+        }
     }, [navigate, setSession]);
 
-    const { messages, connected, loading, sendMessage } = useWebSocket(sid, handleWsError);
+    const handleWsServerMessage = useCallback((data: WebSocketPayload) => {
+        if (typeof data.queries_remaining !== 'number' && typeof data.queries_used !== 'number') return;
+
+        setSession(prev => {
+            if (!prev || !prev.anonymous_mode) return prev;
+            return {
+                ...prev,
+                query_limit_remaining: typeof data.queries_remaining === 'number'
+                    ? Math.max(0, data.queries_remaining)
+                    : prev.query_limit_remaining,
+                queries_count: typeof data.queries_used === 'number'
+                    ? data.queries_used
+                    : prev.queries_count,
+            };
+        });
+    }, [setSession]);
+
+    const { messages, setMessages, loading, sendMessage, markStreamingDone, clearMessages } = useWebSocket(sid, handleWsError, handleWsServerMessage);
     const { isRecording, isSpeaking, startRecording, stopRecording, speakText } = useVoice(sid, language);
+
+    // Load saved messages when switching conversations
+    useEffect(() => {
+        if (activeConversation) {
+            setMessages([...activeConversation.messages]);
+        } else {
+            setMessages([]);
+        }
+    }, [activeId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Auto-save messages when they change (skip during switching)
+    const prevActiveIdRef = useRef<string | null>(null);
+    useEffect(() => {
+        // Skip save during conversation switching
+        if (isSwitchingRef.current) return;
+        // Skip when activeId just changed (loading messages from switch)
+        if (prevActiveIdRef.current !== activeId) {
+            prevActiveIdRef.current = activeId;
+            return;
+        }
+        // Save only if there are messages and no streaming
+        if (messages.length > 0) {
+            const anyStreaming = messages.some(m => m.isStreaming);
+            if (!anyStreaming) {
+                saveMessages(messages);
+            }
+        }
+    }, [messages, activeId, saveMessages, isSwitchingRef]);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, loading]);
+
+    const handleNewConsultation = useCallback(() => {
+        // Save current messages before creating new
+        saveBeforeSwitch(messages);
+        clearMessages();
+        createConversation();
+    }, [saveBeforeSwitch, messages, clearMessages, createConversation]);
+
+    const handleSwitchConversation = useCallback((id: string) => {
+        if (id === activeId) return;
+        // Save current conversation's messages & remove if empty
+        saveBeforeSwitch(messages);
+        clearMessages();
+        switchConversation(id);
+    }, [activeId, saveBeforeSwitch, messages, clearMessages, switchConversation]);
 
     const handleSend = () => {
         if (!input.trim() || queriesLeft <= 0) return;
@@ -145,7 +232,7 @@ export default function ChatPage() {
     };
 
     return (
-        <div className="flex h-screen w-full bg-[#050505] text-slate-300 overflow-hidden font-sans selection:bg-[#E87D20]/30 selection:text-white">
+        <div className="flex h-full min-h-0 w-full bg-[#050505] text-slate-300 overflow-hidden font-sans selection:bg-[#E87D20]/30 selection:text-white">
 
             {/* Background Elements (Retained) */}
             <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#121827] via-[#050505] to-[#050505] pointer-events-none z-0"></div>
@@ -155,24 +242,54 @@ export default function ChatPage() {
             {/* ═══════════════════════════════════════════════════════════
                LEFT SIDEBAR (New Section)
                ═══════════════════════════════════════════════════════════ */}
-            <aside className={`${isSidebarOpen ? 'w-72' : 'w-0'} transition-all duration-300 bg-[#0D1220]/60 backdrop-blur-2xl border-r border-[#1E293B] z-50 flex flex-col relative overflow-hidden`}>
-                <div className="p-6 border-b border-[#1E293B] flex items-center justify-between">
+            <aside className={`${isSidebarOpen ? 'w-72' : 'w-0'} flex-shrink-0 transition-all duration-300 bg-[#0D1220]/60 backdrop-blur-2xl border-r border-[#1E293B] z-20 flex flex-col overflow-hidden`}>
+                <div className="flex-shrink-0 p-6 border-b border-[#1E293B] bg-[#0D1220]/95 backdrop-blur-xl flex items-center justify-between">
                     <span className="text-[10px] font-black text-white uppercase tracking-widest">Consultation History</span>
-                    <button onClick={() => setIsSidebarOpen(false)} className="md:hidden text-slate-500 hover:text-white">
+                    <button onClick={() => setIsSidebarOpen(false)} className="text-slate-500 hover:text-white">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-custom">
-                    {/* Yahan par backend se aane wali history map hogi */}
-                    <div className="p-3 rounded-xl bg-white/5 border border-white/5 hover:border-[#E87D20]/30 cursor-pointer transition-all group">
-                        <p className="text-xs text-slate-300 truncate">Property Dispute Case #102</p>
-                        <p className="text-[9px] text-slate-500 mt-1 uppercase">Today • 10:45 AM</p>
-                    </div>
+                <div className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-custom">
+                    {conversations.map(conv => {
+                        const isActive = conv.id === activeId;
+                        const dateStr = new Date(conv.updatedAt).toLocaleDateString([], { month: 'short', day: 'numeric' });
+                        const timeStr = new Date(conv.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        return (
+                            <div
+                                key={conv.id}
+                                onClick={() => handleSwitchConversation(conv.id)}
+                                className={`p-3 rounded-xl cursor-pointer transition-all group relative
+                                    ${isActive
+                                        ? 'bg-[#E87D20]/10 border border-[#E87D20]/30 shadow-[0_0_15px_rgba(232,125,32,0.08)]'
+                                        : 'bg-white/5 border border-white/5 hover:border-[#E87D20]/20'}`}
+                            >
+                                <p className={`text-xs truncate ${isActive ? 'text-[#E87D20] font-bold' : 'text-slate-300'}`}>
+                                    {conv.title}
+                                </p>
+                                <div className="flex items-center justify-between mt-1">
+                                    <p className="text-[9px] text-slate-500 uppercase">{dateStr} • {timeStr}</p>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); deleteConversation(conv.id); }}
+                                        className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-rose-400 transition-all p-1"
+                                        title="Delete"
+                                    >
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        );
+                    })}
+                    {conversations.length === 0 && (
+                        <p className="text-[10px] text-slate-600 text-center py-8 uppercase tracking-wider">No consultations yet</p>
+                    )}
                 </div>
 
                 <div className="p-4 border-t border-[#1E293B]">
-                    <button className="w-full py-3 rounded-xl bg-[#E87D20]/10 border border-[#E87D20]/20 text-[#E87D20] text-[10px] font-black uppercase tracking-tighter hover:bg-[#E87D20]/20 transition-all">
+                    <button
+                        onClick={handleNewConsultation}
+                        className="w-full py-3 rounded-xl bg-[#E87D20]/10 border border-[#E87D20]/20 text-[#E87D20] text-[10px] font-black uppercase tracking-tighter hover:bg-[#E87D20]/20 transition-all"
+                    >
                         + New Consultation
                     </button>
                 </div>
@@ -182,43 +299,18 @@ export default function ChatPage() {
                MAIN CONTENT (Original UI)
                ═══════════════════════════════════════════════════════════ */}
             <div className="flex-1 flex flex-col relative h-full">
-                {/* Header (Integrated Toggle and Dynamic Queries) */}
-                <header className="z-30 px-6 py-4 flex items-center justify-between bg-[#0D1220]/80 backdrop-blur-xl border-b border-[#1E293B]">
-                    <div className="flex items-center gap-4">
-                        {/* Sidebar Toggle Button */}
-                        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 hover:bg-white/5 rounded-lg transition-colors text-slate-400">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" /></svg>
-                        </button>
-
-                        <button onClick={() => navigate('/dashboard')} className="p-2 hover:bg-white/5 rounded-lg transition-colors text-[#E87D20]">
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
-                        </button>
-                        <div>
-                            <h1 className="text-xs font-black tracking-[0.2em] text-white uppercase flex items-center gap-2">
-                                Nyaya Mitra <span className="text-[#E87D20] bg-[#E87D20]/10 px-2 py-0.5 rounded border border-[#E87D20]/20 text-[10px]">AI Engine</span>
-                            </h1>
-                            <div className="flex items-center gap-2 mt-0.5">
-                                <span className={`h-1.5 w-1.5 rounded-full ${connected ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-rose-500'}`}></span>
-                                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">{connected ? 'Secure Connection' : 'Offline'}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-6">
-                        <div className="hidden sm:flex flex-col items-end">
-                            <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest">Queries Left</span>
-                            {/* DYNAMIC QUERIES FROM BACKEND/CONTEXT */}
-                            <span className="text-sm font-mono text-[#E87D20] font-bold">{queriesLeft}</span>
-                        </div>
-                        <div className="h-8 w-[1px] bg-[#1E293B]"></div>
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#E87D20] to-orange-400 p-[1px]">
-                            <div className="w-full h-full rounded-full bg-[#0D1220] flex items-center justify-center text-xs font-bold text-white">ID</div>
-                        </div>
-                    </div>
-                </header>
+                {/* Floating sidebar toggle (only visible when sidebar is closed) */}
+                {!isSidebarOpen && (
+                    <button
+                        onClick={() => setIsSidebarOpen(true)}
+                        className="absolute top-4 left-4 z-20 p-2 bg-[#0D1220]/80 backdrop-blur-xl border border-[#1E293B] rounded-xl hover:border-[#E87D20]/40 transition-all text-slate-400 hover:text-white"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                    </button>
+                )}
 
                 {/* Main Chat Area */}
-                <main className="flex-1 overflow-y-auto px-4 md:px-0 py-10 scrollbar-custom pb-48 relative z-10">
+                <main className="flex-1 overflow-y-auto px-4 md:px-0 py-6 scrollbar-custom pb-48 relative z-10">
                     <div className="max-w-4xl mx-auto space-y-8">
                         <GuestLimitBanner />
 
@@ -247,7 +339,11 @@ export default function ChatPage() {
                                                     ? 'bg-amber-500/5 text-amber-200 border border-amber-500/20'
                                                     : 'bg-[#0D1220] text-slate-200 border border-[#1E293B] rounded-bl-none'}`}
                                         >
-                                            {formatText(msg.text)}
+                                            {msg.sender === 'assistant' ? (
+                                                <StreamingBubble msg={msg} onStreamingDone={markStreamingDone} formatText={formatText} />
+                                            ) : (
+                                                formatText(msg.text)
+                                            )}
                                         </div>
 
                                         <div className="flex items-center gap-3 mt-3 px-3">
@@ -264,7 +360,7 @@ export default function ChatPage() {
                                             )}
                                         </div>
 
-                                        {!isUser && !isSystem && (
+                                        {!isUser && !isSystem && !msg.isStreaming && (
                                             <div className="mt-6 w-full space-y-4">
                                                 <div className="flex flex-wrap gap-2">
                                                     {msg.confidence_label && <ConfidenceBadge score={msg.confidence_score ?? 0} label={msg.confidence_label} color="orange" />}

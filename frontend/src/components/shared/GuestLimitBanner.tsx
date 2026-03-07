@@ -11,7 +11,7 @@ export default function GuestLimitBanner() {
     if (queriesLeft <= 0) return (
         <div className="mx-4 mb-3 bg-red-50 border border-red-200 rounded-2xl p-3 flex items-center gap-3">
             <p className="flex-1 text-red-700 text-sm font-medium">{t('chat.guest_limit_reached')}</p>
-            <button onClick={() => navigate('/entry')}
+            <button onClick={() => navigate('/login')}
                 className="px-3 py-1.5 bg-red-600 text-white text-xs rounded-xl font-bold">
                 {t('chat.register_now')}
             </button>

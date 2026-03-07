@@ -41,6 +41,7 @@ $POLLY_VOICE_EN = "Kajal"
 $LAMBDA_ROLE_NAME = "nyaya-mitra-lambda-role"
 $LAMBDA_ROLE_ARN = "arn:aws:iam::${ACCOUNT_ID}:role/$LAMBDA_ROLE_NAME"
 
+
 Write-Host ""
 
 # ══════════════════════════════════════
@@ -227,29 +228,96 @@ Remove-Item $trustPolicyPath -ErrorAction SilentlyContinue
 # Attach policies
 $policies = @(
     "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-    "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess",
-    "arn:aws:iam::aws:policy/AmazonS3FullAccess",
     "arn:aws:iam::aws:policy/AmazonBedrockFullAccess",
     "arn:aws:iam::aws:policy/ComprehendFullAccess",
     "arn:aws:iam::aws:policy/AmazonTranscribeFullAccess",
     "arn:aws:iam::aws:policy/AmazonPollyFullAccess",
     "arn:aws:iam::aws:policy/AmazonSNSFullAccess",
-    "arn:aws:iam::aws:policy/AWSLambdaRole",
-    "arn:aws:iam::aws:policy/AmazonAPIGatewayInvokeFullAccess"
+    "arn:aws:iam::aws:policy/AmazonTextractFullAccess"
 )
 
 foreach ($policy in $policies) {
     aws iam attach-role-policy --role-name $LAMBDA_ROLE_NAME --policy-arn $policy 2>$null
 }
-Write-Host "  10 IAM Policies attached" -ForegroundColor Green
+Write-Host "  6 managed IAM policies attached" -ForegroundColor Green
 
-# Inline policy for API GW manage connections
-$apiGwPolicyPath = Join-Path $env:TEMP "apigw-policy.json"
-$apiGwContent = '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["execute-api:ManageConnections"],"Resource":"arn:aws:execute-api:ap-south-1:' + $ACCOUNT_ID + ':*/*/@connections/*"}]}'
-$apiGwContent | Out-File -FilePath $apiGwPolicyPath -Encoding ascii
+# Scoped inline runtime policy (DynamoDB, S3, Lambda invoke, WebSocket manage)
+$runtimePolicyPath = Join-Path $env:TEMP "nyaya-runtime-policy.json"
+$runtimePolicy = @"
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DynamoScopedAccess",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:BatchGetItem",
+        "dynamodb:BatchWriteItem"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:$REGION:$ACCOUNT_ID:table/${TABLE_PREFIX}-*",
+        "arn:aws:dynamodb:$REGION:$ACCOUNT_ID:table/${TABLE_PREFIX}-*/index/*"
+      ]
+    },
+    {
+      "Sid": "S3ObjectScopedAccess",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::$LEGAL_CORPUS_BUCKET/*",
+        "arn:aws:s3:::$USER_UPLOADS_BUCKET/*",
+        "arn:aws:s3:::$USER_DOCUMENTS_BUCKET/*",
+        "arn:aws:s3:::$FRONTEND_BUCKET/*",
+        "arn:aws:s3:::$TEMPLATES_BUCKET/*"
+      ]
+    },
+    {
+      "Sid": "S3BucketListAccess",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::$LEGAL_CORPUS_BUCKET",
+        "arn:aws:s3:::$USER_UPLOADS_BUCKET",
+        "arn:aws:s3:::$USER_DOCUMENTS_BUCKET",
+        "arn:aws:s3:::$FRONTEND_BUCKET",
+        "arn:aws:s3:::$TEMPLATES_BUCKET"
+      ]
+    },
+    {
+      "Sid": "LambdaInvokeScoped",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:InvokeFunction"
+      ],
+      "Resource": "arn:aws:lambda:$REGION:$ACCOUNT_ID:function:nyaya-mitra-*"
+    },
+    {
+      "Sid": "WsConnectionManage",
+      "Effect": "Allow",
+      "Action": [
+        "execute-api:ManageConnections"
+      ],
+      "Resource": "arn:aws:execute-api:$REGION:$ACCOUNT_ID:*/*/@connections/*"
+    }
+  ]
+}
+"@
+$runtimePolicy | Out-File -FilePath $runtimePolicyPath -Encoding ascii
 
-aws iam put-role-policy --role-name $LAMBDA_ROLE_NAME --policy-name "APIGatewayManageConnections" --policy-document "file://$apiGwPolicyPath" 2>$null
-Remove-Item $apiGwPolicyPath -ErrorAction SilentlyContinue
+aws iam put-role-policy --role-name $LAMBDA_ROLE_NAME --policy-name "NyayaMitraRuntimeAccess" --policy-document "file://$runtimePolicyPath" 2>$null
+Remove-Item $runtimePolicyPath -ErrorAction SilentlyContinue
 
 Write-Host "  Waiting 10s for IAM propagation..." -ForegroundColor DarkGray
 Start-Sleep -Seconds 10
@@ -274,7 +342,7 @@ Write-Host ""
 # ══════════════════════════════════════
 #       STEP 6: CREATE LAMBDA FUNCTIONS
 # ══════════════════════════════════════
-Write-Host "[6/8] Creating 14 Lambda Functions..." -ForegroundColor Yellow
+Write-Host "[6/8] Creating 24 Lambda Functions..." -ForegroundColor Yellow
 
 # Write env vars to temp file
 $envJsonPath = Join-Path $env:TEMP "lambda-env.json"
@@ -316,7 +384,17 @@ $functions = @(
     @("nyaya-mitra-action-recommender", "10", "128"),
     @("nyaya-mitra-session-handler", "30", "128"),
     @("nyaya-mitra-voice-input", "60", "256"),
-    @("nyaya-mitra-text-to-speech", "30", "256")
+    @("nyaya-mitra-voice-status", "30", "256"),
+    @("nyaya-mitra-text-to-speech", "30", "256"),
+    @("nyaya-mitra-notice-scanner", "60", "512"),
+    @("nyaya-mitra-notice-analysis", "60", "512"),
+    @("nyaya-mitra-complaint-generator", "60", "512"),
+    @("nyaya-mitra-complaint-delivery", "30", "256"),
+    @("nyaya-mitra-timeline-builder", "60", "512"),
+    @("nyaya-mitra-timeline-pdf-generator", "60", "512"),
+    @("nyaya-mitra-dashboard-widgets", "30", "256"),
+    @("nyaya-mitra-deadline-reminder", "30", "256"),
+    @("nyaya-mitra-legal-aid-escalator", "30", "256")
 )
 
 foreach ($fn in $functions) {
@@ -368,7 +446,17 @@ $deployMap = @(
     @("nyaya-mitra-action-recommender", "chat\action_recommender"),
     @("nyaya-mitra-session-handler", "entry\session_handler"),
     @("nyaya-mitra-voice-input", "voice\voice_input_handler"),
-    @("nyaya-mitra-text-to-speech", "voice\text_to_speech")
+    @("nyaya-mitra-voice-status", "voice\voice_status_handler"),
+    @("nyaya-mitra-text-to-speech", "voice\text_to_speech"),
+    @("nyaya-mitra-notice-scanner", "documents\notice_scanner"),
+    @("nyaya-mitra-notice-analysis", "documents\notice_analysis"),
+    @("nyaya-mitra-complaint-generator", "documents\complaint_generator"),
+    @("nyaya-mitra-complaint-delivery", "documents\complaint_delivery"),
+    @("nyaya-mitra-timeline-builder", "documents\timeline_builder"),
+    @("nyaya-mitra-timeline-pdf-generator", "documents\timeline_pdf_generator"),
+    @("nyaya-mitra-dashboard-widgets", "documents\dashboard_widgets"),
+    @("nyaya-mitra-deadline-reminder", "documents\deadline_reminder"),
+    @("nyaya-mitra-legal-aid-escalator", "documents\legal_aid_escalator")
 )
 
 foreach ($item in $deployMap) {
@@ -437,7 +525,7 @@ Write-Host "  Account:   $ACCOUNT_ID" -ForegroundColor Cyan
 Write-Host "  Region:    $REGION" -ForegroundColor Cyan
 Write-Host "  Tables:    12 DynamoDB tables" -ForegroundColor Cyan
 Write-Host "  Buckets:   5 S3 buckets" -ForegroundColor Cyan
-Write-Host "  Lambdas:   14 functions" -ForegroundColor Cyan
+Write-Host "  Lambdas:   24 functions" -ForegroundColor Cyan
 Write-Host "  Legal Docs: Uploaded to S3" -ForegroundColor Cyan
 Write-Host "  IAM Role:  $LAMBDA_ROLE_ARN" -ForegroundColor Cyan
 Write-Host ""

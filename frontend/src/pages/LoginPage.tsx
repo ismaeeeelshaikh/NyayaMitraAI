@@ -3,6 +3,15 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useSession } from '../context/SessionContext';
 import axios from 'axios';
+import {
+    confirmForgotPassword,
+    confirmSignUpCode,
+    parseIdTokenClaims,
+    saveAuthTokens,
+    signInWithPassword,
+    signUpWithPassword,
+    startForgotPassword,
+} from '../auth/cognito';
 
 const API = import.meta.env.VITE_HTTP_API_URL;
 
@@ -120,14 +129,40 @@ export default function LoginPage() {
     const [tab, setTab] = useState<'login' | 'register'>('login');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [name, setName] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [info, setInfo] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [verificationRequired, setVerificationRequired] = useState(false);
+    const [pendingVerificationEmail, setPendingVerificationEmail] = useState('');
+    const [pendingVerificationUsername, setPendingVerificationUsername] = useState('');
+    const [confirmationCode, setConfirmationCode] = useState('');
+    const [forgotMode, setForgotMode] = useState(false);
+    const [forgotStage, setForgotStage] = useState<'request' | 'confirm'>('request');
+    const [forgotCode, setForgotCode] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmNewPassword, setConfirmNewPassword] = useState('');
 
     useEffect(() => {
         if (searchParams.get('guest') === 'true') handleGuestStart();
     }, []);
+
+    const resetRegisterVerification = () => {
+        setVerificationRequired(false);
+        setPendingVerificationEmail('');
+        setPendingVerificationUsername('');
+        setConfirmationCode('');
+    };
+
+    const resetForgotFlow = () => {
+        setForgotMode(false);
+        setForgotStage('request');
+        setForgotCode('');
+        setNewPassword('');
+        setConfirmNewPassword('');
+    };
 
     const handleGuestStart = async () => {
         setLoading(true); setError('');
@@ -146,20 +181,110 @@ export default function LoginPage() {
         }
     };
 
+    const startRegisteredSession = async (userId: string) => {
+        const { data } = await axios.post(`${API}/v1/entry/session`, {
+            language_code: language,
+            mode_selection: 'chat',
+            anonymous_mode: false,
+            user_id: userId,
+        });
+        setSession(data);
+        navigate('/dashboard');
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true); setError('');
+        setLoading(true);
+        setError('');
+        setInfo('');
+
         try {
-            const { data } = await axios.post(`${API}/v1/entry/session`, {
-                language_code: language,
-                mode_selection: 'chat',
-                anonymous_mode: false,
-                user_id: email,
-            });
-            setSession(data);
-            navigate('/dashboard');
-        } catch {
-            setError(t('common.error'));
+            const identifier = email.trim().toLowerCase();
+            if (!identifier) {
+                throw new Error('Please enter your email.');
+            }
+
+            if (forgotMode) {
+                if (forgotStage === 'request') {
+                    const result = await startForgotPassword(identifier);
+                    setForgotStage('confirm');
+                    setInfo(
+                        result.deliveryDestination
+                            ? `Password reset code sent to ${result.deliveryDestination}.`
+                            : 'Password reset code sent. Check your email.'
+                    );
+                    return;
+                }
+
+                if (!forgotCode.trim()) {
+                    throw new Error('Please enter the reset code.');
+                }
+                if (!newPassword) {
+                    throw new Error('Please enter the new password.');
+                }
+                if (newPassword !== confirmNewPassword) {
+                    throw new Error('New password and confirm password do not match.');
+                }
+
+                await confirmForgotPassword(identifier, forgotCode.trim(), newPassword);
+                resetForgotFlow();
+                setPassword('');
+                setConfirmPassword('');
+                setInfo('Password changed successfully. Please sign in with your new password.');
+                return;
+            }
+
+            if (!password) {
+                throw new Error('Please enter your password.');
+            }
+
+            if (tab === 'register') {
+                if (verificationRequired) {
+                    if (!confirmationCode.trim()) {
+                        throw new Error('Please enter the verification code sent to your email.');
+                    }
+                    const verificationIdentity = pendingVerificationUsername || pendingVerificationEmail || identifier;
+                    await confirmSignUpCode(verificationIdentity, confirmationCode.trim());
+                    resetRegisterVerification();
+                } else {
+                    if (!confirmPassword) {
+                        throw new Error('Please confirm your password.');
+                    }
+                    if (password !== confirmPassword) {
+                        throw new Error('Password and confirm password do not match.');
+                    }
+
+                    const result = await signUpWithPassword({
+                        email: identifier,
+                        password,
+                        name,
+                    });
+
+                    if (!result.userConfirmed) {
+                        setVerificationRequired(true);
+                        setPendingVerificationEmail(identifier);
+                        setPendingVerificationUsername(result.username);
+                        setInfo(
+                            result.deliveryDestination
+                                ? `Verification code sent to ${result.deliveryDestination}. Enter it below to continue.`
+                                : 'Verification code sent to your email. Enter it below to continue.'
+                        );
+                        return;
+                    }
+                }
+            }
+
+            const tokens = await signInWithPassword(identifier, password);
+            saveAuthTokens(tokens);
+
+            const claims = parseIdTokenClaims(tokens.id_token);
+            const claimEmail = typeof claims.email === 'string' ? claims.email : '';
+            const claimSub = typeof claims.sub === 'string' ? claims.sub : '';
+            const userId = claimEmail || claimSub || identifier;
+
+            await startRegisteredSession(userId);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : t('common.error'));
         } finally {
             setLoading(false);
         }
@@ -185,6 +310,16 @@ export default function LoginPage() {
         { icon: '💻', en: 'Cyber Crime', hi: 'साइबर अपराध' },
         { icon: '📋', en: 'RTI', hi: 'RTI' },
     ];
+
+    const emailLabel = language === 'en' ? 'Email' : 'à¤ˆà¤®à¥‡à¤²';
+    const emailPlaceholder = 'email@example.com';
+    const confirmPasswordLabel = language === 'en' ? 'Confirm Password' : 'à¤ªà¤¾à¤¸à¤µà¤°à¥à¤¡ à¤¦à¥‹à¤¬à¤¾à¤°à¤¾ à¤¡à¤¾à¤²à¥‡à¤‚';
+    const forgotPasswordLabel = language === 'en' ? 'Forgot Password?' : 'à¤ªà¤¾à¤¸à¤µà¤°à¥à¤¡ à¤­à¥‚à¤² à¤—à¤?';
+    const backToSignInLabel = language === 'en' ? 'Back to Sign In' : 'à¤µà¤¾à¤ªà¤¸ à¤¸à¤¾à¤‡à¤¨ à¤‡à¤¨ à¤ªà¤° à¤œà¤¾à¤à¤‚';
+    const resetCodeLabel = language === 'en' ? 'Reset Code' : 'à¤°à¥€à¤¸à¥‡à¤Ÿ à¤•à¥‹à¤¡';
+    const sendResetCodeLabel = language === 'en' ? 'Send Reset Code' : 'à¤°à¥€à¤¸à¥‡à¤Ÿ à¤•à¥‹à¤¡ à¤­à¥‡à¤œà¥‡à¤‚';
+    const resetPasswordLabel = language === 'en' ? 'Reset Password' : 'à¤ªà¤¾à¤¸à¤µà¤°à¥à¤¡ à¤°à¥€à¤¸à¥‡à¤Ÿ à¤•à¤°à¥‡à¤‚';
+    const newPasswordLabel = language === 'en' ? 'New Password' : 'à¤¨à¤¯à¤¾ à¤ªà¤¾à¤¸à¤µà¤°à¥à¤¡';
 
     return (
         <div className="min-h-screen bg-[#050505] text-white flex relative overflow-hidden font-sans selection:bg-[#E87D20]/30 selection:text-white">
@@ -282,7 +417,7 @@ export default function LoginPage() {
                             </div>
                         </Link>
                         <h1 className="text-3xl font-extrabold text-white tracking-tight font-display">
-                            {tab === 'login' ? 'Welcome Back' : 'Create Account'}
+                            {forgotMode ? resetPasswordLabel : tab === 'login' ? 'Welcome Back' : 'Create Account'}
                         </h1>
                         <p className="text-sm text-[#8B95A5] font-medium mt-2">{t('tagline')}</p>
                     </div>
@@ -295,7 +430,13 @@ export default function LoginPage() {
                             {(['login', 'register'] as const).map(t_tab => (
                                 <button
                                     key={t_tab}
-                                    onClick={() => { setTab(t_tab); setError(''); }}
+                                    onClick={() => {
+                                        setTab(t_tab);
+                                        setError('');
+                                        setInfo('');
+                                        resetRegisterVerification();
+                                        resetForgotFlow();
+                                    }}
                                     className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition-all duration-300
                                         ${tab === t_tab
                                             ? 'bg-[#0D1220] text-[#E87D20] border border-[#1E293B] shadow-[0_0_15px_rgba(232,125,32,0.15)]'
@@ -309,7 +450,7 @@ export default function LoginPage() {
 
                         <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
                             {/* Name (register only) */}
-                            {tab === 'register' && (
+                            {tab === 'register' && !verificationRequired && !forgotMode && (
                                 <div className="animate-fade-in">
                                     <label className="block text-xs font-bold text-white uppercase tracking-wider mb-2">{t('login.name')}</label>
                                     <div className="relative group">
@@ -329,7 +470,7 @@ export default function LoginPage() {
 
                             {/* Email */}
                             <div>
-                                <label className="block text-xs font-bold text-white uppercase tracking-wider mb-2">{t('login.email')}</label>
+                                <label className="block text-xs font-bold text-white uppercase tracking-wider mb-2">{emailLabel}</label>
                                 <div className="relative group">
                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8B95A5] group-focus-within:text-[#E87D20] transition-colors">
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
@@ -338,39 +479,143 @@ export default function LoginPage() {
                                         type="text"
                                         value={email}
                                         onChange={e => setEmail(e.target.value)}
-                                        placeholder={t('login.email_placeholder')}
+                                        placeholder={emailPlaceholder}
                                         className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-[#1E293B] bg-[#121827] focus:ring-1 focus:ring-[#E87D20] focus:border-[#E87D20] outline-none transition-all text-white placeholder:text-[#8B95A5] shadow-inner"
                                     />
                                 </div>
                             </div>
 
                             {/* Password */}
-                            <div>
-                                <label className="block text-xs font-bold text-white uppercase tracking-wider mb-2">{t('login.password')}</label>
-                                <div className="relative group">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8B95A5] group-focus-within:text-[#E87D20] transition-colors">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
-                                    </span>
-                                    <input
-                                        type={showPassword ? 'text' : 'password'}
-                                        value={password}
-                                        onChange={e => setPassword(e.target.value)}
-                                        placeholder="••••••••"
-                                        className="w-full pl-12 pr-12 py-3.5 rounded-xl border border-[#1E293B] bg-[#121827] focus:ring-1 focus:ring-[#E87D20] focus:border-[#E87D20] outline-none transition-all text-white placeholder:text-[#8B95A5] shadow-inner tracking-widest"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8B95A5] hover:text-white transition-colors"
-                                    >
-                                        {showPassword ? (
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" /><line x1="1" x2="23" y1="1" y2="23" /></svg>
-                                        ) : (
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
-                                        )}
-                                    </button>
+                            {!forgotMode && (
+                                <div>
+                                    <label className="block text-xs font-bold text-white uppercase tracking-wider mb-2">{t('login.password')}</label>
+                                    <div className="relative group">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8B95A5] group-focus-within:text-[#E87D20] transition-colors">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+                                        </span>
+                                        <input
+                                            type={showPassword ? 'text' : 'password'}
+                                            value={password}
+                                            onChange={e => setPassword(e.target.value)}
+                                            placeholder="********"
+                                            className="w-full pl-12 pr-12 py-3.5 rounded-xl border border-[#1E293B] bg-[#121827] focus:ring-1 focus:ring-[#E87D20] focus:border-[#E87D20] outline-none transition-all text-white placeholder:text-[#8B95A5] shadow-inner tracking-widest"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8B95A5] hover:text-white transition-colors"
+                                        >
+                                            {showPassword ? (
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" /><line x1="1" x2="23" y1="1" y2="23" /></svg>
+                                            ) : (
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                                            )}
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
+
+                            {/* Confirm Password (register only) */}
+                            {tab === 'register' && !verificationRequired && !forgotMode && (
+                                <div>
+                                    <label className="block text-xs font-bold text-white uppercase tracking-wider mb-2">{confirmPasswordLabel}</label>
+                                    <div className="relative group">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8B95A5] group-focus-within:text-[#E87D20] transition-colors">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+                                        </span>
+                                        <input
+                                            type={showPassword ? 'text' : 'password'}
+                                            value={confirmPassword}
+                                            onChange={e => setConfirmPassword(e.target.value)}
+                                            placeholder="********"
+                                            className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-[#1E293B] bg-[#121827] focus:ring-1 focus:ring-[#E87D20] focus:border-[#E87D20] outline-none transition-all text-white placeholder:text-[#8B95A5] shadow-inner tracking-widest"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Register verification */}
+                            {tab === 'register' && verificationRequired && !forgotMode && (
+                                <div className="animate-fade-in">
+                                    <label className="block text-xs font-bold text-white uppercase tracking-wider mb-2">
+                                        {language === 'en' ? 'Verification Code' : 'Verification Code'}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={confirmationCode}
+                                        onChange={e => setConfirmationCode(e.target.value)}
+                                        placeholder={language === 'en' ? 'Enter OTP from email' : 'Enter OTP from email'}
+                                        className="w-full px-4 py-3.5 rounded-xl border border-[#1E293B] bg-[#121827] focus:ring-1 focus:ring-[#E87D20] focus:border-[#E87D20] outline-none transition-all text-white placeholder:text-[#8B95A5] shadow-inner"
+                                    />
+                                </div>
+                            )}
+
+                            {/* Forgot password fields */}
+                            {forgotMode && forgotStage === 'confirm' && (
+                                <>
+                                    <div className="animate-fade-in">
+                                        <label className="block text-xs font-bold text-white uppercase tracking-wider mb-2">{resetCodeLabel}</label>
+                                        <input
+                                            type="text"
+                                            value={forgotCode}
+                                            onChange={e => setForgotCode(e.target.value)}
+                                            placeholder={language === 'en' ? 'Enter reset code' : 'Enter reset code'}
+                                            className="w-full px-4 py-3.5 rounded-xl border border-[#1E293B] bg-[#121827] focus:ring-1 focus:ring-[#E87D20] focus:border-[#E87D20] outline-none transition-all text-white placeholder:text-[#8B95A5] shadow-inner"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-white uppercase tracking-wider mb-2">{newPasswordLabel}</label>
+                                        <input
+                                            type={showPassword ? 'text' : 'password'}
+                                            value={newPassword}
+                                            onChange={e => setNewPassword(e.target.value)}
+                                            placeholder="********"
+                                            className="w-full px-4 py-3.5 rounded-xl border border-[#1E293B] bg-[#121827] focus:ring-1 focus:ring-[#E87D20] focus:border-[#E87D20] outline-none transition-all text-white placeholder:text-[#8B95A5] shadow-inner tracking-widest"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-white uppercase tracking-wider mb-2">{confirmPasswordLabel}</label>
+                                        <input
+                                            type={showPassword ? 'text' : 'password'}
+                                            value={confirmNewPassword}
+                                            onChange={e => setConfirmNewPassword(e.target.value)}
+                                            placeholder="********"
+                                            className="w-full px-4 py-3.5 rounded-xl border border-[#1E293B] bg-[#121827] focus:ring-1 focus:ring-[#E87D20] focus:border-[#E87D20] outline-none transition-all text-white placeholder:text-[#8B95A5] shadow-inner tracking-widest"
+                                        />
+                                    </div>
+                                </>
+                            )}
+
+                            {/* Forgot/Back action */}
+                            {tab === 'login' && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setError('');
+                                        setInfo('');
+                                        if (forgotMode) {
+                                            resetForgotFlow();
+                                            return;
+                                        }
+                                        setForgotMode(true);
+                                        setForgotStage('request');
+                                        setForgotCode('');
+                                        setNewPassword('');
+                                        setConfirmNewPassword('');
+                                        setPassword('');
+                                    }}
+                                    className="text-sm font-bold text-[#8B95A5] hover:text-[#E87D20] transition-colors"
+                                >
+                                    {forgotMode ? backToSignInLabel : forgotPasswordLabel}
+                                </button>
+                            )}
+
+                            {/* Info Message */}
+                            {info && (
+                                <div className="px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-sm font-medium animate-fade-in">
+                                    {info}
+                                </div>
+                            )}
 
                             {/* Error Message */}
                             {error && (
@@ -391,28 +636,38 @@ export default function LoginPage() {
                                         <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
                                         {t('common.loading')}
                                     </>
+                                ) : forgotMode ? (
+                                    forgotStage === 'request' ? sendResetCodeLabel : resetPasswordLabel
+                                ) : tab === 'register' && verificationRequired ? (
+                                    language === 'en' ? 'Verify & Continue' : 'Verify & Continue'
+                                ) : tab === 'login' ? (
+                                    t('login.login_btn')
                                 ) : (
-                                    tab === 'login' ? t('login.login_btn') : t('login.register_btn')
+                                    t('login.register_btn')
                                 )}
                             </button>
                         </form>
 
-                        {/* Divider */}
-                        <div className="flex items-center gap-4 my-6 relative z-10">
-                            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#1E293B] to-transparent"></div>
-                            <span className="text-xs font-bold text-[#8B95A5] uppercase tracking-widest">{t('login.or')}</span>
-                            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#1E293B] to-transparent"></div>
-                        </div>
+                        {!forgotMode && (
+                            <>
+                                {/* Divider */}
+                                <div className="flex items-center gap-4 my-6 relative z-10">
+                                    <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#1E293B] to-transparent"></div>
+                                    <span className="text-xs font-bold text-[#8B95A5] uppercase tracking-widest">{t('login.or')}</span>
+                                    <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#1E293B] to-transparent"></div>
+                                </div>
 
-                        {/* Guest Button */}
-                        <button
-                            onClick={handleGuestStart}
-                            disabled={loading}
-                            className="relative z-10 group w-full py-3.5 rounded-xl font-bold text-sm text-[#8B95A5] bg-[#121827] border border-[#1E293B] hover:border-[#E87D20] hover:text-[#E87D20] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 shadow-[0_0_10px_rgba(255,255,255,0.05)]"
-                        >
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#8B95A5] group-hover:text-[#E87D20] transition-colors"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-                            {t('login.guest_btn')}
-                        </button>
+                                {/* Guest Button */}
+                                <button
+                                    onClick={handleGuestStart}
+                                    disabled={loading}
+                                    className="relative z-10 group w-full py-3.5 rounded-xl font-bold text-sm text-[#8B95A5] bg-[#121827] border border-[#1E293B] hover:border-[#E87D20] hover:text-[#E87D20] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 shadow-[0_0_10px_rgba(255,255,255,0.05)]"
+                                >
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#8B95A5] group-hover:text-[#E87D20] transition-colors"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                                    {t('login.guest_btn')}
+                                </button>
+                            </>
+                        )}
 
                         {/* Language toggle */}
                         <div className="mt-8 flex items-center justify-center gap-3 relative z-10">

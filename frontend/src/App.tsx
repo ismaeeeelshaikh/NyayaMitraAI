@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LanguageProvider } from './context/LanguageContext';
 import { SessionProvider } from './context/SessionContext';
 import { StealthProvider } from './context/StealthContext';
-import AppLayout from './components/layout/AppLayout';
+import ProtectedAppLayout from './components/auth/ProtectedAppLayout';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
@@ -11,6 +11,8 @@ import TimelinePage from './pages/TimelinePage';
 import ComplaintGeneratorPage from './pages/ComplaintGeneratorPage';
 import NoticeScannerPage from './pages/NoticeScannerPage';
 import LegalAidPage from './pages/LegalAidPage';
+
+import AuthCallbackPage from './pages/AuthCallbackPage';
 
 export default function App() {
   return (
@@ -22,10 +24,11 @@ export default function App() {
               {/* Public routes */}
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
-              <Route path="/entry" element={<Navigate to="/login" replace />} />
+
+              <Route path="/callback" element={<AuthCallbackPage />} />
 
               {/* Authenticated routes (inside AppLayout with bottom navbar) */}
-              <Route element={<AppLayout />}>
+              <Route element={<ProtectedAppLayout />}>
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/chat" element={<ChatPage />} />
                 <Route path="/timeline" element={<TimelinePage />} />

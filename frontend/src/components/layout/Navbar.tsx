@@ -1,7 +1,9 @@
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { useStealth } from '../../context/StealthContext';
 import { useState } from 'react';
+import { clearStoredSession, useSession } from '../../context/SessionContext';
+import { clearAuthTokens } from '../../auth/cognito';
 
 const NAV_LINKS = [
     { path: '/dashboard', label: 'nav.dashboard', icon: '🏠' },
@@ -17,7 +19,16 @@ export default function Navbar() {
     const { pathname } = useLocation();
     const { t, toggleLang, language } = useLanguage();
     const { handleLogoTap } = useStealth();
+    const { setSession } = useSession();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+    const handleLogout = () => {
+        clearStoredSession();
+        clearAuthTokens();
+
+        setSession(null);
+        navigate('/login', { replace: true });
+    };
 
     return (
         <header className="sticky top-0 z-40 backdrop-blur-xl bg-[#090C15]/90 border-b border-[#1E293B] shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]">
@@ -71,12 +82,12 @@ export default function Navbar() {
                             </button>
                         </div>
 
-                        <Link
-                            to="/login"
+                        <button
+                            onClick={handleLogout}
                             className="px-5 py-2 rounded-full text-white font-bold text-sm bg-[#121827] border border-[#1E293B] hover:border-[#E87D20] hover:text-[#E87D20] shadow-[0_0_10px_rgba(255,255,255,0.05)] transition-all hover:scale-105 active:scale-95 hidden sm:flex"
                         >
                             {t('nav.logout')}
-                        </Link>
+                        </button>
 
                         {/* Mobile hamburger */}
                         <button
@@ -118,9 +129,9 @@ export default function Navbar() {
                             <button onClick={toggleLang} className="text-[#8B95A5] hover:text-white text-sm font-bold bg-[#121827] px-4 py-2 rounded-lg border border-[#1E293B]">
                                 {language === 'en' ? 'Switch to हिंदी' : 'Switch to English'}
                             </button>
-                            <Link to="/login" className="text-red-400 hover:text-red-300 text-sm font-bold bg-red-500/10 px-4 py-2 rounded-lg border border-red-500/20">
+                            <button onClick={handleLogout} className="text-red-400 hover:text-red-300 text-sm font-bold bg-red-500/10 px-4 py-2 rounded-lg border border-red-500/20">
                                 {t('nav.logout')}
-                            </Link>
+                            </button>
                         </div>
                     </div>
                 )}

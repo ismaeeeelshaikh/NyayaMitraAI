@@ -126,6 +126,7 @@ $lambdas = @(
     "nyaya-mitra-action-recommender",
     "nyaya-mitra-session-handler",
     "nyaya-mitra-voice-input",
+    "nyaya-mitra-voice-status",
     "nyaya-mitra-text-to-speech"
 )
 

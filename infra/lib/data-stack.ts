@@ -238,7 +238,7 @@ export class DataStack extends cdk.Stack {
             encryptionKey: props.kmsKey,
             cors: [{
                 allowedMethods: [s3.HttpMethods.PUT, s3.HttpMethods.POST, s3.HttpMethods.GET],
-                allowedOrigins: ['http://localhost:5173', 'https://nyayamitra.in', '*'],
+                allowedOrigins: ['http://localhost:5173', 'https://nyayamitra.in'],
                 allowedHeaders: ['*'],
                 maxAge: 3000
             }],
