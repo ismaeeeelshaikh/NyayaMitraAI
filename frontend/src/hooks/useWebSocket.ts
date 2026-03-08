@@ -54,7 +54,7 @@ export function useWebSocket(
                 if (data.error || data.error_code) {
                     onError?.(data);
                     setMessages(prev => [...prev, {
-                        id: Date.now().toString(),
+                        id: crypto.randomUUID(),
                         sender: 'system',
                         text: data.message || data.error || 'Unexpected error from server.',
                         timestamp: new Date().toISOString(),
@@ -86,7 +86,7 @@ export function useWebSocket(
 
     const sendMessage = useCallback((text: string, language: string) => {
         if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
-        const msgId = Date.now().toString();
+        const msgId = crypto.randomUUID();
         setMessages(prev => [...prev, {
             id: msgId, sender: 'user', text, timestamp: new Date().toISOString()
         }]);

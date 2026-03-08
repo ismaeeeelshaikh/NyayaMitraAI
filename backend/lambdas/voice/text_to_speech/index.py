@@ -50,13 +50,14 @@ def handler(event, context):
     voice_id   = VOICE_MAP.get(language, 'Kajal')
     lang_code  = 'hi-IN' if language == 'hi' else 'en-IN'
 
+    engine = 'neural' if voice_id == 'Kajal' else 'standard'
     try:
         resp = polly.synthesize_speech(
             Text=clean_text,
             OutputFormat='mp3',
             VoiceId=voice_id,
             LanguageCode=lang_code,
-            Engine='standard'   # Standard cheaper than neural
+            Engine=engine
         )
         audio_b64 = base64.b64encode(resp['AudioStream'].read()).decode('utf-8')
     except Exception as e:

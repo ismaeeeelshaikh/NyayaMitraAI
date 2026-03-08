@@ -100,7 +100,7 @@ export default function ChatPage() {
     const { session, setSession, queriesLeft } = useSession();
     const [input, setInput] = useState('');
     const [voiceMode, setVoiceMode] = useState(false);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.innerWidth >= 768);
     const bottomRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
 
@@ -240,9 +240,23 @@ export default function ChatPage() {
             <div className="fixed top-[-10%] left-[-5%] w-[400px] h-[400px] bg-[#E87D20]/10 rounded-full blur-[120px] animate-pulse pointer-events-none"></div>
 
             {/* ═══════════════════════════════════════════════════════════
-               LEFT SIDEBAR (New Section)
+               LEFT SIDEBAR — overlay on mobile, push on desktop
                ═══════════════════════════════════════════════════════════ */}
-            <aside className={`${isSidebarOpen ? 'w-72' : 'w-0'} flex-shrink-0 transition-all duration-300 bg-[#0D1220]/60 backdrop-blur-2xl border-r border-[#1E293B] z-20 flex flex-col overflow-hidden`}>
+            {/* Dark backdrop — mobile only */}
+            {isSidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black/60 z-20 md:hidden"
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
+            <aside className={`
+                ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+                ${isSidebarOpen ? 'md:w-72' : 'md:w-0'}
+                fixed md:relative top-0 left-0 h-full w-72
+                flex-shrink-0 transition-all duration-300
+                bg-[#0D1220]/95 md:bg-[#0D1220]/60 backdrop-blur-2xl
+                border-r border-[#1E293B] z-30 md:z-20 flex flex-col overflow-hidden
+            `}>
                 <div className="flex-shrink-0 p-6 border-b border-[#1E293B] bg-[#0D1220]/95 backdrop-blur-xl flex items-center justify-between">
                     <span className="text-[10px] font-black text-white uppercase tracking-widest">Consultation History</span>
                     <button onClick={() => setIsSidebarOpen(false)} className="text-slate-500 hover:text-white">
@@ -258,7 +272,7 @@ export default function ChatPage() {
                         return (
                             <div
                                 key={conv.id}
-                                onClick={() => handleSwitchConversation(conv.id)}
+                                onClick={() => { handleSwitchConversation(conv.id); if (window.innerWidth < 768) setIsSidebarOpen(false); }}
                                 className={`p-3 rounded-xl cursor-pointer transition-all group relative
                                     ${isActive
                                         ? 'bg-[#E87D20]/10 border border-[#E87D20]/30 shadow-[0_0_15px_rgba(232,125,32,0.08)]'
@@ -315,9 +329,9 @@ export default function ChatPage() {
                         <GuestLimitBanner />
 
                         {messages.length === 0 && (
-                            <div className="py-20 flex flex-col items-center justify-center text-center animate-in fade-in slide-in-from-top-4 duration-1000">
+                            <div className="py-12 sm:py-20 flex flex-col items-center justify-center text-center animate-in fade-in slide-in-from-top-4 duration-1000 px-4">
                                 <div className="w-20 h-20 bg-[#0D1220] border border-[#E87D20]/30 rounded-[2rem] flex items-center justify-center text-3xl shadow-[0_0_50px_rgba(232,125,32,0.15)] mb-8">⚖️</div>
-                                <h2 className="text-3xl font-black text-white mb-4 tracking-tight font-display">How can I assist you today?</h2>
+                                <h2 className="text-xl sm:text-3xl font-black text-white mb-4 tracking-tight font-display">How can I assist you today?</h2>
                                 <p className="text-[#8B95A5] max-w-md mx-auto text-base font-medium leading-relaxed">
                                     Start a secure legal consultation. Our engine analyzes thousands of precedents in real-time.
                                 </p>
@@ -350,12 +364,23 @@ export default function ChatPage() {
                                             <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">
                                                 {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </span>
-                                            {!isUser && !isSystem && (
+                                            {!isUser && !isSystem && !msg.isStreaming && (
                                                 <button
                                                     onClick={() => !isSpeaking && speakText(msg.text)}
-                                                    className={`transition-all ${isSpeaking ? 'text-[#E87D20]' : 'text-slate-600 hover:text-slate-400'}`}
+                                                    className={`transition-all flex items-center gap-1.5 px-2 py-1 rounded-md ${isSpeaking ? 'bg-[#E87D20]/20 text-[#E87D20]' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}`}
+                                                    title={isSpeaking ? "Speaking..." : "Listen"}
                                                 >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
+                                                    {isSpeaking ? (
+                                                        <>
+                                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
+                                                            <span className="text-[9px] font-bold uppercase tracking-wider">Listening</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
+                                                            <span className="text-[9px] font-bold uppercase tracking-wider">Listen</span>
+                                                        </>
+                                                    )}
                                                 </button>
                                             )}
                                         </div>
