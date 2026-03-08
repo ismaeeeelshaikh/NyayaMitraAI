@@ -188,7 +188,8 @@ export default function LoginPage() {
             anonymous_mode: false,
             user_id: userId,
         });
-        setSession(data);
+        // Backend may not return user_id, so ensure it's always set
+        setSession({ ...data, user_id: userId });
         navigate('/dashboard');
     };
 

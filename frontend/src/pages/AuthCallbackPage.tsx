@@ -53,7 +53,8 @@ export default function AuthCallbackPage() {
                     user_id: userId,
                 });
 
-                setSession(data);
+                // Backend may not return user_id, so ensure it's always set
+                setSession({ ...data, user_id: userId });
                 clearPkceState();
                 navigate('/dashboard', { replace: true });
             } catch (err) {

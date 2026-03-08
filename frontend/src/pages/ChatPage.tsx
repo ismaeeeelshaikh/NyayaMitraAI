@@ -105,6 +105,9 @@ export default function ChatPage() {
     const navigate = useNavigate();
 
     const sid = session?.session_id || '';
+    // Persist conversation history only for authenticated users.
+    // Guests should always have an ephemeral chat experience.
+    const chatStorageKey = session && !session.anonymous_mode ? session.user_id : '';
 
     // ── Conversation history management ──
     const {
@@ -112,12 +115,11 @@ export default function ChatPage() {
         activeId,
         activeConversation,
         saveMessages,
-        saveBeforeSwitch,
         createConversation,
         switchConversation,
         deleteConversation,
         isSwitchingRef,
-    } = useConversations(sid);
+    } = useConversations(chatStorageKey);
 
     const handleWsError = useCallback((error: WebSocketPayload) => {
         if (error.error_code === 'SESSION_EXPIRED') {
@@ -158,51 +160,52 @@ export default function ChatPage() {
     const { isRecording, isSpeaking, startRecording, stopRecording, speakText } = useVoice(sid, language);
 
     // Load saved messages when switching conversations
+    const prevMsgLenRef = useRef<number>(0);
     useEffect(() => {
         if (activeConversation) {
-            setMessages([...activeConversation.messages]);
+            const msgs = [...activeConversation.messages];
+            setMessages(msgs);
+            prevMsgLenRef.current = msgs.length;
         } else {
             setMessages([]);
+            prevMsgLenRef.current = 0;
         }
     }, [activeId]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Auto-save messages when they change (skip during switching)
-    const prevActiveIdRef = useRef<string | null>(null);
     useEffect(() => {
         // Skip save during conversation switching
         if (isSwitchingRef.current) return;
-        // Skip when activeId just changed (loading messages from switch)
-        if (prevActiveIdRef.current !== activeId) {
-            prevActiveIdRef.current = activeId;
-            return;
-        }
         // Save only if there are messages and no streaming
         if (messages.length > 0) {
             const anyStreaming = messages.some(m => m.isStreaming);
-            if (!anyStreaming) {
+            if (!anyStreaming && messages.length !== prevMsgLenRef.current) {
+                prevMsgLenRef.current = messages.length;
                 saveMessages(messages);
             }
+        } else {
+            prevMsgLenRef.current = 0;
         }
-    }, [messages, activeId, saveMessages, isSwitchingRef]);
+    }, [messages, saveMessages, isSwitchingRef]);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, loading]);
 
     const handleNewConsultation = useCallback(() => {
-        // Save current messages before creating new
-        saveBeforeSwitch(messages);
+        // If current chat is already empty, don't create another one
+        if (messages.length === 0) return;
+        // Save current messages & create new conversation atomically
+        createConversation(messages);
         clearMessages();
-        createConversation();
-    }, [saveBeforeSwitch, messages, clearMessages, createConversation]);
+    }, [messages, clearMessages, createConversation]);
 
     const handleSwitchConversation = useCallback((id: string) => {
         if (id === activeId) return;
-        // Save current conversation's messages & remove if empty
-        saveBeforeSwitch(messages);
+        // Save current conversation's messages, then switch
+        switchConversation(id, messages);
         clearMessages();
-        switchConversation(id);
-    }, [activeId, saveBeforeSwitch, messages, clearMessages, switchConversation]);
+    }, [activeId, messages, clearMessages, switchConversation]);
 
     const handleSend = () => {
         if (!input.trim() || queriesLeft <= 0) return;
@@ -245,7 +248,7 @@ export default function ChatPage() {
             {/* Dark backdrop — mobile only */}
             {isSidebarOpen && (
                 <div
-                    className="fixed inset-0 bg-black/60 z-20 md:hidden"
+                    className="fixed inset-0 bg-black/60 z-40 md:hidden"
                     onClick={() => setIsSidebarOpen(false)}
                 />
             )}
@@ -255,11 +258,11 @@ export default function ChatPage() {
                 fixed md:relative top-0 left-0 h-full w-72
                 flex-shrink-0 transition-all duration-300
                 bg-[#0D1220]/95 md:bg-[#0D1220]/60 backdrop-blur-2xl
-                border-r border-[#1E293B] z-30 md:z-20 flex flex-col overflow-hidden
+                border-r border-[#1E293B] z-50 md:z-20 flex flex-col overflow-hidden
             `}>
                 <div className="flex-shrink-0 p-6 border-b border-[#1E293B] bg-[#0D1220]/95 backdrop-blur-xl flex items-center justify-between">
                     <span className="text-[10px] font-black text-white uppercase tracking-widest">Consultation History</span>
-                    <button onClick={() => setIsSidebarOpen(false)} className="text-slate-500 hover:text-white">
+                    <button onClick={() => setIsSidebarOpen(false)} className="text-slate-500 hover:text-white" title="Close sidebar">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
@@ -299,7 +302,7 @@ export default function ChatPage() {
                     )}
                 </div>
 
-                <div className="p-4 border-t border-[#1E293B]">
+                <div className="p-4 border-t border-[#1E293B] pb-[max(1rem,env(safe-area-inset-bottom))]">
                     <button
                         onClick={handleNewConsultation}
                         className="w-full py-3 rounded-xl bg-[#E87D20]/10 border border-[#E87D20]/20 text-[#E87D20] text-[10px] font-black uppercase tracking-tighter hover:bg-[#E87D20]/20 transition-all"
@@ -318,6 +321,7 @@ export default function ChatPage() {
                     <button
                         onClick={() => setIsSidebarOpen(true)}
                         className="absolute top-4 left-4 z-20 p-2 bg-[#0D1220]/80 backdrop-blur-xl border border-[#1E293B] rounded-xl hover:border-[#E87D20]/40 transition-all text-slate-400 hover:text-white"
+                        title="Open sidebar"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" /></svg>
                     </button>
@@ -434,6 +438,7 @@ export default function ChatPage() {
                             <button
                                 onClick={() => setVoiceMode(v => !v)}
                                 className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${voiceMode ? 'bg-[#E87D20] text-white shadow-[0_0_15px_#e87d2066]' : 'text-slate-500 hover:bg-white/5'}`}
+                                title="Toggle voice mode"
                             >
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
                             </button>
@@ -465,6 +470,7 @@ export default function ChatPage() {
                                     onClick={handleSend}
                                     disabled={!input.trim() || loading || queriesLeft <= 0}
                                     className="w-12 h-12 rounded-2xl bg-[#E87D20] text-white flex items-center justify-center hover:bg-orange-500 active:scale-95 transition-all disabled:opacity-20 shadow-lg shadow-[#E87D20]/20"
+                                    title="Send message"
                                 >
                                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 12h14M12 5l7 7-7 7" /></svg>
                                 </button>

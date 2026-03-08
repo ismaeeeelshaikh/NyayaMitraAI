@@ -10,11 +10,10 @@ Kya karta hai:
 import boto3
 import json
 import urllib.request
+import os
 
-transcribe = boto3.client('transcribe', region_name='ap-south-1')
-
-CORS = {'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json'}
-
+s3 = boto3.client('s3', region_name='ap-south-1')
+UPLOADS_BUCKET = os.environ.get('USER_UPLOADS_BUCKET', 'nyaya-mitra-user-uploads-804078307105')
 
 def _parse_job_name(event: dict) -> str:
     params = event.get('queryStringParameters') or {}
@@ -28,16 +27,19 @@ def _parse_job_name(event: dict) -> str:
         return ''
 
 
-def _load_transcript(transcript_url: str) -> str:
-    with urllib.request.urlopen(transcript_url, timeout=10) as resp:
-        data = json.loads(resp.read().decode('utf-8'))
+def _load_transcript_from_s3(job_name: str) -> str:
+    try:
+        obj = s3.get_object(Bucket=UPLOADS_BUCKET, Key=f"transcripts/{job_name}.json")
+        data = json.loads(obj['Body'].read().decode('utf-8'))
+        transcripts = data.get('results', {}).get('transcripts', [])
+        if transcripts:
+            return transcripts[0].get('transcript', '').strip()
+    except Exception as e:
+        print(f"S3 fetch error: {e}")
+    return ''
 
-    transcripts = data.get('results', {}).get('transcripts', [])
-    if not transcripts:
-        return ''
-
-    return transcripts[0].get('transcript', '').strip()
-
+transcribe = boto3.client('transcribe', region_name='ap-south-1')
+CORS = {'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json'}
 
 def handler(event, context):
     job_name = _parse_job_name(event)
@@ -77,25 +79,12 @@ def handler(event, context):
             })
         }
 
-    transcript_url = job.get('Transcript', {}).get('TranscriptFileUri', '')
-    if not transcript_url:
-        return {
-            'statusCode': 200,
-            'headers': CORS,
-            'body': json.dumps({
-                'status': 'failed',
-                'job_name': job_name,
-                'reason': 'Transcript URL missing'
-            })
-        }
-
-    try:
-        transcript = _load_transcript(transcript_url)
-    except Exception as exc:
+    transcript = _load_transcript_from_s3(job_name)
+    if not transcript:
         return {
             'statusCode': 500,
             'headers': CORS,
-            'body': json.dumps({'error': f'Could not read transcript: {exc}'})
+            'body': json.dumps({'error': f'Could not read transcript from S3 for job {job_name}'})
         }
 
     return {

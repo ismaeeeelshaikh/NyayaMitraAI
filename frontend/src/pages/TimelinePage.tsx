@@ -119,7 +119,7 @@ export default function TimelinePage() {
                             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
                         </div>
                         <div>
-                            <h1 className="text-3xl font-black text-white tracking-tight font-display uppercase">
+                            <h1 className="text-xl sm:text-3xl font-black text-white tracking-tight font-display uppercase">
                                 {t('timeline.title')}
                             </h1>
                             <p className="text-[#8B95A5] font-black text-[10px] tracking-[0.3em] uppercase">Nyaya Mitra AI Engine</p>
@@ -133,8 +133,8 @@ export default function TimelinePage() {
                 {/* Input Card (Dark Glass) */}
                 <section className="relative group animate-in fade-in slide-in-from-bottom-4 duration-700">
                     <div className="absolute -inset-0.5 bg-gradient-to-r from-[#E87D20]/20 to-orange-500/20 rounded-[2.5rem] blur opacity-75 group-focus-within:opacity-100 transition duration-500"></div>
-                    <div className="relative bg-[#0D1220]/80 backdrop-blur-xl border border-[#1E293B] p-2 rounded-[2.5rem] shadow-2xl">
-                        <div className="bg-[#050505]/40 rounded-[2rem] p-6">
+                    <div className="relative bg-[#0D1220]/80 backdrop-blur-xl border border-[#1E293B] p-2 rounded-2xl sm:rounded-[2.5rem] shadow-2xl">
+                        <div className="bg-[#050505]/40 rounded-xl sm:rounded-[2rem] p-4 sm:p-6">
                             <textarea
                                 value={text}
                                 onChange={e => setText(e.target.value)}

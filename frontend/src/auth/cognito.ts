@@ -84,9 +84,26 @@ export const getCognitoConfig = (): CognitoConfig | null => {
 const parseErrorMessage = (payload: unknown, fallback: string): string => {
     if (!payload || typeof payload !== 'object') return fallback;
     const data = payload as Record<string, unknown>;
-    if (typeof data.message === 'string' && data.message.trim()) return data.message.trim();
-    if (typeof data.Message === 'string' && data.Message.trim()) return data.Message.trim();
-    return fallback;
+    let msg = '';
+    if (typeof data.message === 'string' && data.message.trim()) msg = data.message.trim();
+    else if (typeof data.Message === 'string' && data.Message.trim()) msg = data.Message.trim();
+    else return fallback;
+
+    // Friendly overrides for common Cognito errors
+    const lower = msg.toLowerCase();
+    if (lower.includes('password') && (lower.includes('conform') || lower.includes('policy'))) {
+        if (lower.includes('not long enough')) return 'Password must be at least 8 characters long.';
+        if (lower.includes('uppercase')) return 'Password must contain at least one uppercase letter.';
+        if (lower.includes('lowercase')) return 'Password must contain at least one lowercase letter.';
+        if (lower.includes('numeric') || lower.includes('number')) return 'Password must contain at least one number.';
+        if (lower.includes('symbol') || lower.includes('special')) return 'Password must contain at least one special character.';
+        return 'Password must be at least 8 characters with uppercase, lowercase, number, and special character.';
+    }
+    if (lower.includes('user already exists') || lower.includes('account with the given email already exists')) {
+        return 'An account with this email already exists. Please sign in instead.';
+    }
+
+    return msg;
 };
 
 const callCognitoIdp = async <T>(

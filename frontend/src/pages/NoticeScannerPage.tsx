@@ -158,13 +158,13 @@ export default function NoticeScannerPage() {
             <main className="flex-1 relative z-10 p-4 sm:p-8 max-w-4xl mx-auto w-full pb-32 space-y-8 animate-fade-in">
 
                 {/* Header Section */}
-                <section className="relative overflow-hidden bg-[#0D1220] border border-[#1E293B] shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] rounded-[2.5rem] p-8 sm:p-10 mt-4">
+                <section className="relative overflow-hidden bg-[#0D1220] border border-[#1E293B] shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] rounded-2xl sm:rounded-[2.5rem] p-6 sm:p-10 mt-4">
                     <div className="absolute -right-10 -top-10 w-48 h-48 bg-[#E87D20]/10 rounded-full blur-[60px] pointer-events-none"></div>
                     <div className="relative z-10">
                         <h2 className="text-xs font-bold tracking-[0.3em] text-[#E87D20] uppercase mb-4 flex items-center gap-2">
                             <span className="w-8 h-[1px] bg-[#E87D20]/50"></span> OCR Clause Analysis
                         </h2>
-                        <h1 className="text-4xl font-extrabold text-white font-display leading-tight mb-3">Notice Scanner</h1>
+                        <h1 className="text-2xl sm:text-4xl font-extrabold text-white font-display leading-tight mb-3">Notice Scanner</h1>
                         <p className="text-[#8B95A5] font-medium text-lg max-w-2xl leading-relaxed">
                             Process legal documents to extract key obligations, critical deadlines, and risk profiles.
                         </p>
@@ -178,7 +178,7 @@ export default function NoticeScannerPage() {
                             onDrop={e => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) processFile(f); }}
                             onDragOver={e => { e.preventDefault(); setDragging(true); }}
                             onDragLeave={() => setDragging(false)}
-                            className={`group relative cursor-pointer bg-[#0D1220]/50 backdrop-blur-xl border-2 border-dashed rounded-[3rem] p-16 text-center flex flex-col items-center justify-center min-h-[400px] transition-all duration-500
+                            className={`group relative cursor-pointer bg-[#0D1220]/50 backdrop-blur-xl border-2 border-dashed rounded-2xl sm:rounded-[3rem] p-8 sm:p-16 text-center flex flex-col items-center justify-center min-h-[280px] sm:min-h-[400px] transition-all duration-500
                             ${dragging ? 'border-[#E87D20] bg-[#E87D20]/5 scale-[1.01]' : 'border-[#1E293B] hover:border-[#E87D20]/50 hover:bg-[#0D1220]'}`}
                         >
                             <input ref={inputRef} type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) processFile(f); }} />

@@ -37,9 +37,9 @@ export default function CrisisButton() {
             )}
             <button
                 onClick={() => setOpen(o => !o)}
-                className="fixed bottom-20 right-4 z-50 w-14 h-14 bg-red-600 hover:bg-red-700
+                className="fixed bottom-6 right-4 z-50 w-12 h-12 md:w-14 md:h-14 bg-red-600 hover:bg-red-700
                    text-white rounded-full shadow-2xl flex items-center justify-center
-                   text-2xl animate-pulse-slow hover:scale-110 transition-all"
+                   text-xl md:text-2xl animate-pulse-slow hover:scale-110 transition-all"
                 title="Emergency Helplines"
             >🆘</button>
         </>

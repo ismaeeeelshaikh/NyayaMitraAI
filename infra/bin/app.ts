@@ -6,6 +6,7 @@ import { IdentityStack } from '../lib/identity-stack';
 import { DataStack } from '../lib/data-stack';
 import { ApiStack } from '../lib/api-stack';
 import { OpsStack } from '../lib/ops-stack';
+import { ComputeStack } from '../lib/compute-stack';
 
 const app = new cdk.App();
 
@@ -31,6 +32,14 @@ const api = new ApiStack(app, 'NyayaApiStack', {
     env,
     userPool: identity.userPool,
     userPoolClient: identity.userPoolClient
+});
+
+const compute = new ComputeStack(app, 'NyayaComputeStack', {
+    env,
+    tables: data.tables,
+    buckets: data.buckets,
+    httpApi: api.httpApi,
+    webSocketApi: api.webSocketApi
 });
 
 new OpsStack(app, 'NyayaOpsStack', {

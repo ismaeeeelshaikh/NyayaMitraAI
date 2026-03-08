@@ -175,13 +175,13 @@ export default function ComplaintGeneratorPage() {
             <main className="flex-1 relative z-10 px-4 py-8 sm:py-12 max-w-3xl mx-auto w-full space-y-8 animate-fade-in">
 
                 {/* Hero Greeting Section (Dashboard Style) */}
-                <section className="relative overflow-hidden bg-[#0D1220] border border-[#1E293B] shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] rounded-[2.5rem] p-8 sm:p-10">
+                <section className="relative overflow-hidden bg-[#0D1220] border border-[#1E293B] shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] rounded-2xl sm:rounded-[2.5rem] p-6 sm:p-10">
                     <div className="absolute -right-10 -top-10 w-48 h-48 bg-[#E87D20]/10 rounded-full mix-blend-screen blur-[60px] pointer-events-none"></div>
                     <div className="relative z-10">
                         <h2 className="text-sm font-bold tracking-widest text-[#E87D20] uppercase mb-3 flex items-center gap-2">
                             📝 Professional Drafter
                         </h2>
-                        <h1 className="text-4xl font-extrabold text-white font-display leading-tight mb-3">AI Legal Drafter</h1>
+                        <h1 className="text-2xl sm:text-4xl font-extrabold text-white font-display leading-tight mb-3">AI Legal Drafter</h1>
                         <p className="text-[#8B95A5] font-medium text-lg max-w-xl">
                             Automatically write professional, watertight legal drafts in minutes. Approved formats accepted directly by authorities.
                         </p>
@@ -198,8 +198,7 @@ export default function ComplaintGeneratorPage() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {TYPES.map((tp, i) => (
                                 <button key={tp.id} onClick={() => { setType(tp.id); setStep('form'); }}
-                                    className="group relative bg-[#0D1220] border border-[#1E293B] hover:border-[#E87D20]/50 rounded-[2rem] p-6 shadow-lg transition-all duration-300 text-left overflow-hidden hover:-translate-y-1.5"
-                                    style={{ transitionDelay: `${i * 50}ms` }}>
+                                    className={`group relative bg-[#0D1220] border border-[#1E293B] hover:border-[#E87D20]/50 rounded-2xl sm:rounded-[2rem] p-5 sm:p-6 shadow-lg transition-all duration-300 text-left overflow-hidden hover:-translate-y-1.5 delay-[${i * 50}ms]`}>
                                     <div className={`absolute -right-6 -bottom-6 w-24 h-24 bg-gradient-to-br ${tp.color} opacity-5 rounded-full blur-2xl group-hover:opacity-20 transition-opacity`}></div>
 
                                     <div className={`w-14 h-14 rounded-[1.2rem] bg-gradient-to-br ${tp.color} text-white flex items-center justify-center mb-5 shadow-lg transform group-hover:scale-110 transition-transform`}>
@@ -224,7 +223,7 @@ export default function ComplaintGeneratorPage() {
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M19 12H5M12 19l-7-7 7-7" /></svg> Change Category
                         </button>
 
-                        <div className="bg-[#090C15]/80 backdrop-blur-2xl border border-[#1E293B] p-8 sm:p-10 rounded-[2.5rem] shadow-2xl space-y-8 relative overflow-hidden">
+                        <div className="bg-[#090C15]/80 backdrop-blur-2xl border border-[#1E293B] p-5 sm:p-10 rounded-2xl sm:rounded-[2.5rem] shadow-2xl space-y-8 relative overflow-hidden">
                             <h2 className="text-2xl font-bold text-white font-display">Required Details</h2>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -235,6 +234,7 @@ export default function ComplaintGeneratorPage() {
                                         </label>
                                         <input type={f.type} value={(form as any)[f.key]}
                                             onChange={e => set(f.key, e.target.value)}
+                                            placeholder={f.i18n.startsWith('complaint.') ? t(f.i18n) : f.i18n}
                                             className="w-full px-5 py-4 bg-[#050505] border border-[#1E293B] rounded-2xl text-white focus:outline-none focus:border-[#E87D20] focus:ring-1 focus:ring-[#E87D20] transition-all" />
                                     </div>
                                 ))}
