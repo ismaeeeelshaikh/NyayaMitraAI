@@ -410,26 +410,7 @@ const POWERED_BY = [
     { icon: '🗄️', name: 'DynamoDB', desc: 'Session & case data at scale' },
 ];
 
-const TESTIMONIAL_SCENARIOS = [
-    {
-        quote: 'मेरे मकान मालिक ने बिना नोटिस किराया बढ़ाया। न्याय मित्र ने Rent Control Act की धारा बताई और शिकायत का ड्राफ्ट 2 मिनट में बना दिया।',
-        quoteEn: 'My landlord raised rent without notice. Nyaya Mitra cited the exact Rent Control Act section and drafted my complaint in 2 minutes.',
-        persona: 'Priya, Mumbai',
-        emoji: '👩‍🎓',
-    },
-    {
-        quote: 'ऑनलाइन फ्रॉड हो गया था ₹25,000 का। न्याय मित्र ने Cyber Crime FIR ड्राफ्ट कर दी और नजदीकी थाने का पता बताया।',
-        quoteEn: 'I was defrauded ₹25,000 online. Nyaya Mitra drafted my Cyber Crime FIR and located the nearest police station.',
-        persona: 'Ramesh, Jaipur',
-        emoji: '👨‍💼',
-    },
-    {
-        quote: 'RTI कैसे फाइल करें कुछ नहीं पता था। न्याय मित्र ने पूरा RTI application बना दिया 5 मिनट में।',
-        quoteEn: 'I had no idea how to file an RTI. Nyaya Mitra generated my complete RTI application in just 5 minutes.',
-        persona: 'Anita, Delhi',
-        emoji: '👩‍🍳',
-    },
-];
+
 
 /* ─── StatCard ─── */
 function StatCard({ value, suffix, label, icon }: { value: number; suffix: string; label: string; icon: string }) {
@@ -469,7 +450,7 @@ function CrisisStatCard({ value, suffix, label, highlight }: { value: number; su
 export default function LandingPage() {
     const { t, toggleLang, language } = useLanguage();
     const [scrollY, setScrollY] = useState(0);
-    const [activeTestimonial, setActiveTestimonial] = useState(0);
+
 
     useEffect(() => {
         const onScroll = () => setScrollY(window.scrollY);
@@ -477,10 +458,7 @@ export default function LandingPage() {
         return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
-    useEffect(() => {
-        const iv = setInterval(() => setActiveTestimonial(i => (i + 1) % TESTIMONIAL_SCENARIOS.length), 5000);
-        return () => clearInterval(iv);
-    }, []);
+
 
     const featuresView = useInView(0.1);
     const stepsView = useInView(0.1);
@@ -700,43 +678,7 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* ═══ TESTIMONIALS ═══ */}
-            <section className="relative z-10 px-6 py-24 border-t border-[#1E293B]">
-                <div className="max-w-5xl mx-auto">
-                    <div className="text-center mb-16">
-                        <h2 className="text-4xl sm:text-5xl font-extrabold font-display text-white">
-                            {texts.caseTitle}
-                        </h2>
-                    </div>
-                    <div className="relative max-w-3xl mx-auto h-[280px]">
-                        {TESTIMONIAL_SCENARIOS.map((t_item, i) => (
-                            <div key={i} className={`transition-all duration-1000 absolute inset-0 ${i === activeTestimonial ? 'opacity-100 translate-y-0 scale-100 z-10' : 'opacity-0 translate-y-8 scale-95 z-0 pointer-events-none'}`}>
-                                <div className="bg-[#090C15]/80 border border-[#1E293B] rounded-[2.5rem] p-10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] h-full flex flex-col justify-center relative overflow-hidden">
-                                    <div className="flex items-start gap-6 mb-6">
-                                        <div className="w-14 h-14 rounded-2xl bg-[#121827] border border-[#E87D20]/50 flex items-center justify-center text-2xl shadow-[0_0_15px_rgba(232,125,32,0.15)] flex-shrink-0">
-                                            {t_item.emoji}
-                                        </div>
-                                        <div>
-                                            <div className="font-bold text-white text-lg">{t_item.persona}</div>
-                                            <div className="flex items-center gap-1 mt-1">
-                                                {[1, 2, 3, 4, 5].map(s => <span key={s} className="text-[#E87D20] text-sm">★</span>)}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <blockquote className="text-white text-xl leading-relaxed font-display">
-                                        "{language === 'en' ? t_item.quoteEn : t_item.quote}"
-                                    </blockquote>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="flex justify-center gap-2 mt-10">
-                        {TESTIMONIAL_SCENARIOS.map((_, i) => (
-                            <button key={i} onClick={() => setActiveTestimonial(i)} className={`h-1.5 rounded-full transition-all duration-500 ${i === activeTestimonial ? 'bg-[#E87D20] w-8 shadow-[0_0_8px_rgba(232,125,32,0.8)]' : 'bg-[#1E293B] w-3 hover:bg-[#8B95A5]'}`} />
-                        ))}
-                    </div>
-                </div>
-            </section>
+
 
             {/* ═══ Technology ═══ */}
             <section id="technology" ref={techView.ref} className="relative z-10 px-6 py-24 border-t border-[#1E293B]">
@@ -748,7 +690,7 @@ export default function LandingPage() {
                         {texts.techTitle}
                     </h2>
                 </div>
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
                     {POWERED_BY.map((tech, i) => (
                         <div key={i} className={`bg-[#0D1220] border border-[#1E293B] shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] p-6 rounded-[1.5rem] flex items-center gap-4 transition-all duration-700 hover:-translate-y-1 group ${techView.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: `${i * 100}ms` }}>
                             <div className="w-12 h-12 bg-[#121827] border border-[#1E293B] group-hover:border-[#E87D20] rounded-xl flex items-center justify-center text-xl flex-shrink-0 transition-colors">
