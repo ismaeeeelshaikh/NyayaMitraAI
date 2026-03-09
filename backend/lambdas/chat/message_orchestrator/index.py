@@ -24,6 +24,90 @@ lambda_client= boto3.client('lambda', region_name='ap-south-1')
 TABLE_PREFIX  = os.environ.get('TABLE_PREFIX', 'nyaya-mitra')
 GUEST_LIMIT   = int(os.environ.get('GUEST_QUERY_LIMIT', '5'))
 
+FEATURE_ACTIONS = {
+    'timeline': {
+        'action_type': 'Build Timeline',
+        'priority': 'MEDIUM',
+        'timeline': '5-10 minutes',
+        'reasoning': 'A date-wise timeline helps legal analysis and stronger complaint drafting.',
+        'steps': [
+            'Open timeline tool',
+            'Paste your full case story with dates',
+            'Review extracted events and missing evidence'
+        ],
+        'cost': 'Free',
+        'system_route': '/timeline',
+        'can_do_now': True
+    },
+    'notice_scanner': {
+        'action_type': 'Upload Legal Notice',
+        'priority': 'HIGH',
+        'timeline': '3-5 minutes',
+        'reasoning': 'Notice scanner can extract deadlines and legal risk from your document.',
+        'steps': [
+            'Open notice scanner',
+            'Upload notice PDF/photo',
+            'Check deadline and suggested next steps'
+        ],
+        'cost': 'Free',
+        'system_route': '/notice-scanner',
+        'can_do_now': True
+    },
+    'complaint': {
+        'action_type': 'Generate Complaint Draft',
+        'priority': 'MEDIUM',
+        'timeline': '10-15 minutes',
+        'reasoning': 'Complaint generator creates a structured legal draft from your facts.',
+        'steps': [
+            'Open complaint generator',
+            'Fill incident details',
+            'Download and review the draft'
+        ],
+        'cost': 'Free',
+        'system_route': '/complaint-generator',
+        'can_do_now': True
+    }
+}
+
+TIMELINE_HINTS = [
+    'timeline', 'chronology', 'chronological', 'date wise', 'sequence',
+    'kab kya hua', 'events in order', 'incident order'
+]
+
+NOTICE_HINTS = [
+    'notice', 'summon', 'summons', 'legal document', 'document upload',
+    'pdf', 'scan this notice', 'court notice'
+]
+
+COMPLAINT_HINTS = [
+    'complaint', 'fir', 'application', 'draft', 'legal notice draft',
+    'complain', 'case file', 'report this'
+]
+
+def build_feature_recommendations(text: str) -> list[dict]:
+    text_l = (text or '').lower()
+    recommendations: list[dict] = []
+
+    def maybe_add(action_key: str):
+        action = FEATURE_ACTIONS.get(action_key)
+        if not action:
+            return
+        route = action.get('system_route')
+        if any(a.get('system_route') == route for a in recommendations):
+            return
+        recommendations.append(dict(action))
+
+    if any(k in text_l for k in TIMELINE_HINTS):
+        maybe_add('timeline')
+
+    if any(k in text_l for k in NOTICE_HINTS):
+        maybe_add('notice_scanner')
+
+    if any(k in text_l for k in COMPLAINT_HINTS):
+        maybe_add('complaint')
+
+    return recommendations
+
 # ── Helper: Invoke Lambda synchronously ──
 def invoke_sync(func_name: str, payload: dict) -> dict:
     """Kisi Lambda ko call karo aur response wait karo"""
@@ -223,6 +307,7 @@ def handler(event, context):
 
     # STEP 8: Action Recommendation (only if medium/high risk or specific intent)
     recommended_actions = []
+    feature_actions = build_feature_recommendations(text)
     if risk_score >= 30 or intent in ['FileComplaint', 'GenerateDocument', 'EmergencyHelp']:
         print(f"[{message_id}] Step 8: Action recommendation...")
         action_result = invoke_sync('nyaya-mitra-action-recommender', {
@@ -238,6 +323,19 @@ def handler(event, context):
         primary_action = action_result.get('primary_action')
         if primary_action:
             recommended_actions = [primary_action]
+
+    # Feature nudges (timeline/notice upload/complaint) for intent-based UX
+    if feature_actions:
+        existing_routes = {
+            a.get('system_route')
+            for a in recommended_actions
+            if isinstance(a, dict) and a.get('system_route')
+        }
+        for action in feature_actions:
+            route = action.get('system_route')
+            if route and route not in existing_routes:
+                recommended_actions.append(action)
+                existing_routes.add(route)
 
     # ══════════════════════════════════════
     #           PIPELINE END

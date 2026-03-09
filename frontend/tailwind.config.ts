@@ -17,8 +17,8 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Outfit', 'Inter', 'sans-serif'],
+        sans: ['Inter', 'Noto Sans Devanagari', 'system-ui', 'sans-serif'],
+        display: ['Outfit', 'Noto Sans Devanagari', 'Inter', 'sans-serif'],
         hindi: ['Noto Sans Devanagari', 'sans-serif'],
       },
       backgroundImage: {

@@ -6,28 +6,24 @@ import axios from 'axios';
 
 const API = import.meta.env.VITE_HTTP_API_URL;
 
-/* ═══════════════════════════════════════════════════════════
-   DATA & ICONS
-   ═══════════════════════════════════════════════════════════ */
+/* DATA & ICONS */
 const ACTIONS = [
-    { key: 'ask_question', icon: '💬', route: '/chat', theme: 'from-blue-500 to-indigo-600', bg: 'bg-[#0D1220]' },
-    { key: 'build_timeline', icon: '⏳', route: '/timeline', theme: 'from-emerald-400 to-green-600', bg: 'bg-[#0D1220]' },
-    { key: 'generate_complaint', icon: '📝', route: '/complaint-generator', theme: 'from-orange-400 to-amber-600', bg: 'bg-[#0D1220]' },
-    { key: 'scan_notice', icon: '📄', route: '/notice-scanner', theme: 'from-purple-500 to-fuchsia-600', bg: 'bg-[#0D1220]' },
+    { key: 'ask_question', icon: '\u{1F4AC}', route: '/chat', theme: 'from-blue-500 to-indigo-600', bg: 'bg-[#0D1220]' },
+    { key: 'build_timeline', icon: '\u23F3', route: '/timeline', theme: 'from-emerald-400 to-green-600', bg: 'bg-[#0D1220]' },
+    { key: 'generate_complaint', icon: '\u{1F4DD}', route: '/complaint-generator', theme: 'from-orange-400 to-amber-600', bg: 'bg-[#0D1220]' },
+    { key: 'scan_notice', icon: '\u{1F4C4}', route: '/notice-scanner', theme: 'from-purple-500 to-fuchsia-600', bg: 'bg-[#0D1220]' },
 ];
 
 const ISSUE_ICONS: Record<string, { emoji: string, color: string }> = {
-    property: { emoji: '🏠', color: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
-    family: { emoji: '👩‍👧‍👦', color: 'bg-pink-500/10 text-pink-400 border-pink-500/20' },
-    consumer: { emoji: '🛒', color: 'bg-orange-500/10 text-orange-400 border-orange-500/20' },
-    criminal: { emoji: '⚖️', color: 'bg-red-500/10 text-red-400 border-red-500/20' },
-    labor: { emoji: '💼', color: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' },
-    cyber: { emoji: '💻', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' }
+    property: { emoji: '\u{1F3E0}', color: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
+    family: { emoji: '\u{1F469}\u200D\u{1F467}\u200D\u{1F466}', color: 'bg-pink-500/10 text-pink-400 border-pink-500/20' },
+    consumer: { emoji: '\u{1F6D2}', color: 'bg-orange-500/10 text-orange-400 border-orange-500/20' },
+    criminal: { emoji: '\u2696\uFE0F', color: 'bg-red-500/10 text-red-400 border-red-500/20' },
+    labor: { emoji: '\u{1F4BC}', color: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' },
+    cyber: { emoji: '\u{1F4BB}', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' }
 };
 
-/* ═══════════════════════════════════════════════════════════
-   CONSTELLATION PARTICLES (Background Animation)
-   ═══════════════════════════════════════════════════════════ */
+/* CONSTELLATION PARTICLES (Background Animation) */
 function ConstellationParticles() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const particles = useRef<{ x: number; y: number; vx: number; vy: number; size: number; opacity: number; color: string }[]>([]);
@@ -127,12 +123,10 @@ function ConstellationParticles() {
     return <canvas ref={canvasRef} className="fixed inset-0 z-0 pointer-events-none opacity-80" />;
 }
 
-/* ═══════════════════════════════════════════════════════════
-   MAIN DASHBOARD COMPONENT
-   ═══════════════════════════════════════════════════════════ */
+/* MAIN DASHBOARD COMPONENT */
 export default function DashboardPage() {
     const navigate = useNavigate();
-    const { t, language } = useLanguage();
+    const { t } = useLanguage();
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -150,13 +144,13 @@ export default function DashboardPage() {
     return (
         <div className="min-h-screen bg-[#050505] text-white relative overflow-hidden font-sans selection:bg-[#E87D20]/30 selection:text-white flex flex-col">
 
-            {/* ════════════ BACKGROUND EFFECTS ════════════ */}
+            {/* BACKGROUND EFFECTS */}
             <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#121827] via-[#050505] to-[#050505] pointer-events-none z-0"></div>
             <ConstellationParticles />
             <div className="fixed top-[-20%] left-[-10%] w-[500px] h-[500px] bg-[#E87D20]/20 rounded-full mix-blend-screen filter blur-[100px] opacity-40 animate-pulse-slow pointer-events-none z-0"></div>
             <div className="fixed bottom-[-20%] right-[-10%] w-[400px] h-[400px] bg-[#121827] rounded-full mix-blend-screen filter blur-[100px] opacity-60 animate-pulse-slow pointer-events-none z-0" style={{ animationDelay: '3s' }}></div>
 
-            {/* ════════════ MAIN DASHBOARD CONTENT ════════════ */}
+            {/* MAIN DASHBOARD CONTENT */}
             <main className="flex-1 relative z-10 px-4 py-8 sm:py-12 max-w-5xl mx-auto w-full space-y-10 animate-fade-in">
 
                 {/* Hero Greeting Section */}
@@ -167,13 +161,13 @@ export default function DashboardPage() {
                     <div className="relative z-10">
                         <h2 className="text-sm font-bold tracking-widest text-[#E87D20] uppercase mb-3 flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" /></svg>
-                            Nyaya Mitra AI
+                            {t('dashboard.engine_badge')}
                         </h2>
                         <h1 className="text-4xl sm:text-5xl font-extrabold text-white font-display leading-tight mb-4">
                             {t('dashboard.title')}
                         </h1>
                         <p className="text-[#8B95A5] font-medium text-lg max-w-xl">
-                            {language === 'en' ? 'Your personal, secure AI legal assistant. Choose an action below to get started.' : 'आपका व्यक्तिगत, सुरक्षित AI कानूनी सहायक। आरंभ करने के लिए नीचे एक कार्रवाई चुनें।'}
+                            {t('dashboard.subtitle')}
                         </p>
                     </div>
                 </section>
@@ -252,12 +246,12 @@ export default function DashboardPage() {
                                             </div>
                                             <div className="flex-1">
                                                 <div className="font-bold text-white text-[17px] font-display group-hover:text-[#E87D20] transition-colors">{issue.display_name}</div>
-                                                <div className="text-sm font-medium text-[#8B95A5] mt-1 tracking-wide">{issue.count} cases verified</div>
+                                                <div className="text-sm font-medium text-[#8B95A5] mt-1 tracking-wide">{issue.count} {t('dashboard.cases_verified')}</div>
                                             </div>
                                             <span className={`text-[12px] px-4 py-1.5 rounded-full font-bold shadow-sm uppercase tracking-wider
                                                 ${issue.trend === 'up' ? 'bg-red-500/10 text-red-400 border border-red-500/30' :
                                                     issue.trend === 'down' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-[#121827] text-[#8B95A5] border border-[#1E293B]'}`}>
-                                                {issue.trend === 'up' ? '↗ Rising' : issue.trend === 'down' ? '↘ Falling' : '→ Stable'}
+                                                {issue.trend === 'up' ? t('dashboard.trend_up') : issue.trend === 'down' ? t('dashboard.trend_down') : t('dashboard.trend_stable')}
                                             </span>
                                         </button>
                                     )
@@ -265,8 +259,8 @@ export default function DashboardPage() {
 
                                 {(!data?.popular_issues || data.popular_issues.length === 0) && (
                                     <div className="p-12 text-center text-[#8B95A5] font-medium flex flex-col items-center">
-                                        <span className="text-5xl mb-4 grayscale opacity-30">⚖️</span>
-                                        {language === 'en' ? 'Live case data populating...' : 'लाइव केस डेटा लोड हो रहा है...'}
+                                        <span className="text-5xl mb-4 grayscale opacity-30">{'\u2696\uFE0F'}</span>
+                                        {t('dashboard.live_data_loading')}
                                     </div>
                                 )}
                             </div>
@@ -282,12 +276,12 @@ export default function DashboardPage() {
 
                     <div className="relative z-10 p-10 sm:p-12 flex flex-col sm:flex-row items-center justify-between gap-8">
                         <div className="text-left">
-                            <h3 className="text-3xl font-black text-white font-display leading-tight mb-3">Need a lawyer near you?</h3>
-                            <p className="text-[#8B95A5] font-medium text-lg">Find verified Gov/NGO legal aid partners with live capacity tracking.</p>
+                            <h3 className="text-3xl font-black text-white font-display leading-tight mb-3">{t('dashboard.legal_aid_cta_title')}</h3>
+                            <p className="text-[#8B95A5] font-medium text-lg">{t('dashboard.legal_aid_cta_desc')}</p>
                         </div>
 
                         <button onClick={() => navigate('/legal-aid')} className="w-full sm:w-auto px-8 py-4 bg-[linear-gradient(to_right,#E87D20,#FF512F)] hover:bg-[linear-gradient(to_right,#FF512F,#E87D20)] text-white shadow-[0_4px_20px_-2px_rgba(232,125,32,0.5)] rounded-2xl font-bold text-lg font-display hover:scale-105 active:scale-95 transition-all whitespace-nowrap flex items-center justify-center gap-3">
-                            Find Legal Aid <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+                            {t('dashboard.legal_aid_cta_button')} <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
                         </button>
                     </div>
                 </section>
@@ -296,3 +290,4 @@ export default function DashboardPage() {
         </div>
     );
 }
+

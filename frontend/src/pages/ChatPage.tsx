@@ -492,7 +492,7 @@ export default function ChatPage() {
                     font-family: 'Display';
                     src: url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&display=swap');
                 }
-                .font-display { font-family: 'Space Grotesk', sans-serif; }
+                .font-display { font-family: 'Space Grotesk', 'Noto Sans Devanagari', sans-serif; }
             `}</style>
         </div>
     );

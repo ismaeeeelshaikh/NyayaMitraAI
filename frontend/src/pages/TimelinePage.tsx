@@ -80,7 +80,7 @@ export default function TimelinePage() {
     const [error, setError] = useState('');
 
     const generate = async () => {
-        if (text.trim().length < 30) { setError('Please provide more details (at least 30 characters).'); return; }
+        if (text.trim().length < 30) { setError(t('timeline.min_chars_error')); return; }
         setLoading(true); setError('');
         try {
             const { data } = await axios.post(`${API}/v1/timeline/extract`, {
@@ -97,7 +97,7 @@ export default function TimelinePage() {
         try {
             const { data } = await axios.post(`${API}/v1/timeline/export`, { timeline_id: tl.timeline_id });
             window.open(data.download_url, '_blank');
-        } catch { setError('PDF export failed.'); }
+        } catch { setError(t('timeline.pdf_export_failed')); }
         finally { setPdfBusy(false); }
     };
 
@@ -122,12 +122,10 @@ export default function TimelinePage() {
                             <h1 className="text-xl sm:text-3xl font-black text-white tracking-tight font-display uppercase">
                                 {t('timeline.title')}
                             </h1>
-                            <p className="text-[#8B95A5] font-black text-[10px] tracking-[0.3em] uppercase">Nyaya Mitra AI Engine</p>
+                            <p className="text-[#8B95A5] font-black text-[10px] tracking-[0.3em] uppercase">{t('timeline.engine_badge')}</p>
                         </div>
                     </div>
-                    <p className="text-slate-400 font-medium leading-relaxed max-w-2xl">
-                        Type your story or incident description. Our AI will automatically structure it into a chronologically grouped legal timeline with significance analysis.
-                    </p>
+                    <p className="text-slate-400 font-medium leading-relaxed max-w-2xl">{t('timeline.desc')}</p>
                 </header>
 
                 {/* Input Card (Dark Glass) */}
@@ -143,7 +141,7 @@ export default function TimelinePage() {
                                 className="w-full text-[16px] text-white bg-transparent resize-none focus:outline-none placeholder:text-slate-600 leading-relaxed font-medium"
                             />
                             <div className="flex flex-col sm:flex-row items-center justify-between mt-6 pt-5 border-t border-[#1E293B] gap-4">
-                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">{text.length} Characters Analyzed</span>
+                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">{text.length} {t('timeline.characters_analyzed')}</span>
 
                                 {/* ═══════════════════════════════════════════════════════════
                                    DASHBOARD STYLE BUTTON (Updated to Match Dashboard)
@@ -154,7 +152,7 @@ export default function TimelinePage() {
                                     className="w-full sm:w-auto px-10 py-4 bg-gradient-to-br from-[#E87D20] to-[#FF512F] text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-lg shadow-[#E87D20]/20 hover:shadow-[#E87D20]/40 active:scale-95 disabled:opacity-20 transition-all flex items-center justify-center gap-3"
                                 >
                                     {loading && <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>}
-                                    {loading ? 'Analyzing Chronology...' : 'Generate Legal Timeline'}
+                                    {loading ? t('timeline.generate_loading') : t('timeline.generate')}
                                 </button>
                             </div>
                         </div>
@@ -173,7 +171,7 @@ export default function TimelinePage() {
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 px-2">
                             <h2 className="text-xl font-black text-white font-display uppercase tracking-widest flex items-center gap-3">
                                 <span className="w-2 h-8 bg-gradient-to-b from-[#E87D20] to-orange-600 rounded-full"></span>
-                                Detected Events <span className="text-[#E87D20] bg-[#E87D20]/10 px-3 py-1 rounded-full text-xs ml-2 border border-[#E87D20]/20">{tl.timeline.length}</span>
+                                {t('timeline.events_detected')} <span className="text-[#E87D20] bg-[#E87D20]/10 px-3 py-1 rounded-full text-xs ml-2 border border-[#E87D20]/20">{tl.timeline.length}</span>
                             </h2>
                             <button
                                 onClick={exportPdf}
@@ -181,7 +179,7 @@ export default function TimelinePage() {
                                 className="flex items-center justify-center gap-3 w-full sm:w-auto px-6 py-3 bg-[#0D1220] text-emerald-400 text-[10px] font-black uppercase tracking-widest rounded-xl border border-emerald-500/20 hover:bg-emerald-500/5 transition-all disabled:opacity-40"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" x2="8" y1="13" y2="13" /><line x1="16" x2="8" y1="17" y2="17" /><polyline points="10 9 9 9 8 9" /></svg>
-                                {pdfBusy ? 'Exporting...' : 'Export Legal PDF'}
+                                {pdfBusy ? t('timeline.export_loading') : t('timeline.export_pdf')}
                             </button>
                         </div>
 
@@ -214,7 +212,7 @@ export default function TimelinePage() {
                                                 <div className="relative mt-4">
                                                     <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[#E87D20]/30 rounded-full" />
                                                     <div className="pl-5 leading-relaxed">
-                                                        <span className="text-[#E87D20]/60 font-black text-[9px] uppercase block mb-1 tracking-[0.2em]">Legal Significance</span>
+                                                        <span className="text-[#E87D20]/60 font-black text-[9px] uppercase block mb-1 tracking-[0.2em]">{t('timeline.legal_significance')}</span>
                                                         <p className="text-[14px] text-slate-400 font-medium italic">
                                                             {ev.legal_significance}
                                                         </p>
@@ -234,7 +232,7 @@ export default function TimelinePage() {
             </div>
 
             <style>{`
-                .font-display { font-family: 'Space Grotesk', sans-serif; }
+                .font-display { font-family: 'Space Grotesk', 'Noto Sans Devanagari', sans-serif; }
                 .scrollbar-custom::-webkit-scrollbar { width: 4px; }
                 .scrollbar-custom::-webkit-scrollbar-track { background: transparent; }
                 .scrollbar-custom::-webkit-scrollbar-thumb { background: rgba(232, 125, 32, 0.2); border-radius: 10px; }

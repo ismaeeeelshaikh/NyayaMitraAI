@@ -8,9 +8,9 @@ const API = import.meta.env.VITE_HTTP_API_URL;
 
 type Status = 'idle' | 'uploading' | 'analyzing' | 'done' | 'error';
 
-/* ═══════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    NYAYA MITRA CONSTELLATION (Orange & Green Palette)
-   ═══════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function ConstellationParticles() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const particles = useRef<{ x: number; y: number; vx: number; vy: number; size: number; opacity: number; color: string }[]>([]);
@@ -72,11 +72,11 @@ function ConstellationParticles() {
     return <canvas ref={canvasRef} className="fixed inset-0 z-0 pointer-events-none opacity-80" />;
 }
 
-/* ═══════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    MAIN SCANNER PAGE
-   ═══════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 export default function NoticeScannerPage() {
-    const { language } = useLanguage();
+    const { t } = useLanguage();
     const { session } = useSession();
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -106,22 +106,22 @@ export default function NoticeScannerPage() {
                     setStatus('done');
                 } else if (data.processing_status === 'failed') {
                     clearInterval(pollRef.current!);
-                    setError(language === 'en' ? 'Scanning failed. Document is too blurry or unreadable.' : 'स्कैन विफल रहा। दस्तावेज़ धुंधला या अपठनीय है।');
+                    setError(t('notice.scan_failed'));
                     setStatus('error');
                 }
             } catch { /* polling */ }
             if (attempts >= 30) {
                 clearInterval(pollRef.current!);
-                setError(language === 'en' ? 'Analysis engine timeout. Please check your file quality.' : 'एनालिसिस इंजन टाइमआउट। कृपया अपनी फ़ाइल गुणवत्ता जांचें।');
+                setError(t('notice.analysis_timeout'));
                 setStatus('error');
             }
         }, 3000);
-    }, [language]);
+    }, [t]);
 
     const processFile = async (file: File) => {
-        if (file.size > 5 * 1024 * 1024) return setError('File size limit: 5MB.');
+        if (file.size > 5 * 1024 * 1024) return setError(t('notice.file_size_limit'));
         const allowed = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
-        if (!allowed.includes(file.type)) return setError('Please upload PDF, JPG, or PNG only.');
+        if (!allowed.includes(file.type)) return setError(t('notice.file_type_error'));
         setStatus('uploading'); setError('');
         try {
             const b64 = await toBase64(file);
@@ -130,7 +130,7 @@ export default function NoticeScannerPage() {
                 user_id: session?.user_id || 'guest', session_id: session?.session_id
             });
             setStatus('analyzing'); pollForResult(data.notice_id);
-        } catch { setError('Secure connection lost. Retry upload.'); setStatus('error'); }
+        } catch { setError(t('notice.upload_connection_lost')); setStatus('error'); }
     };
 
     const reset = () => { if (pollRef.current) clearInterval(pollRef.current); setStatus('idle'); setAnalysis(null); };
@@ -150,7 +150,7 @@ export default function NoticeScannerPage() {
     return (
         <div className="min-h-screen bg-[#050505] text-white relative overflow-hidden font-sans flex flex-col selection:bg-[#E87D20]/30 selection:text-white">
 
-            {/* ════════════ BACKGROUND ARCHITECTURE ════════════ */}
+            {/* â•â•â•â•â•â•â•â•â•â•â•â• BACKGROUND ARCHITECTURE â•â•â•â•â•â•â•â•â•â•â•â• */}
             <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#121827] via-[#050505] to-[#050505] pointer-events-none z-0"></div>
             <ConstellationParticles />
             <div className="fixed top-[-15%] right-[-5%] w-[500px] h-[500px] bg-[#E87D20]/10 rounded-full mix-blend-screen filter blur-[120px] pointer-events-none z-0 animate-pulse-slow"></div>
@@ -162,11 +162,11 @@ export default function NoticeScannerPage() {
                     <div className="absolute -right-10 -top-10 w-48 h-48 bg-[#E87D20]/10 rounded-full blur-[60px] pointer-events-none"></div>
                     <div className="relative z-10">
                         <h2 className="text-xs font-bold tracking-[0.3em] text-[#E87D20] uppercase mb-4 flex items-center gap-2">
-                            <span className="w-8 h-[1px] bg-[#E87D20]/50"></span> OCR Clause Analysis
+                            <span className="w-8 h-[1px] bg-[#E87D20]/50"></span> {t('notice.hero_badge')}
                         </h2>
-                        <h1 className="text-2xl sm:text-4xl font-extrabold text-white font-display leading-tight mb-3">Notice Scanner</h1>
+                        <h1 className="text-2xl sm:text-4xl font-extrabold text-white font-display leading-tight mb-3">{t('notice.title')}</h1>
                         <p className="text-[#8B95A5] font-medium text-lg max-w-2xl leading-relaxed">
-                            Process legal documents to extract key obligations, critical deadlines, and risk profiles.
+                            {t('notice.hero_desc')}
                         </p>
                     </div>
                 </section>
@@ -179,7 +179,7 @@ export default function NoticeScannerPage() {
                             onDragOver={e => { e.preventDefault(); setDragging(true); }}
                             onDragLeave={() => setDragging(false)}
                             className={`group relative cursor-pointer bg-[#0D1220]/50 backdrop-blur-xl border-2 border-dashed rounded-2xl sm:rounded-[3rem] p-8 sm:p-16 text-center flex flex-col items-center justify-center min-h-[280px] sm:min-h-[400px] transition-all duration-500
-                            ${dragging ? 'border-[#E87D20] bg-[#E87D20]/5 scale-[1.01]' : 'border-[#1E293B] hover:border-[#E87D20]/50 hover:bg-[#0D1220]'}`}
+                            ${dragging ? 'border-[#E87D20] bg-[#E87D20]/5 scale-[1.01]' : 'border-[#1E293B] hover:border-[#E87D20]/50 hover:bg-[#0D1220]'}`}
                         >
                             <input ref={inputRef} type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) processFile(f); }} />
 
@@ -189,11 +189,11 @@ export default function NoticeScannerPage() {
                                 </svg>
                             </div>
 
-                            <h3 className="font-bold text-white text-2xl font-display mb-2">Upload Legal Instrument</h3>
-                            <p className="text-[#8B95A5] font-medium max-w-sm mx-auto leading-relaxed">Drag files here or tap to browse. Optimized for high-fidelity OCR scanning.</p>
+                            <h3 className="font-bold text-white text-2xl font-display mb-2">{t('notice.upload_title')}</h3>
+                            <p className="text-[#8B95A5] font-medium max-w-sm mx-auto leading-relaxed">{t('notice.upload_subtext')}</p>
 
                             <div className="mt-10 px-6 py-2 bg-[#121827] text-[#8B95A5] font-black tracking-widest text-[10px] uppercase rounded-full border border-[#1E293B]">
-                                PDF • JPG • PNG
+                                PDF / JPG / PNG
                             </div>
                         </label>
                     </div>
@@ -206,9 +206,9 @@ export default function NoticeScannerPage() {
                             <div className="w-20 h-20 rounded-full border-4 border-[#E87D20]/20 border-t-[#E87D20] animate-spin"></div>
                         </div>
                         <h2 className="font-black text-3xl text-white font-display mb-3 tracking-tight">
-                            {status === 'uploading' ? 'Extracting Data...' : 'Executing Clause Mapping...'}
+                            {status === 'uploading' ? t('notice.extracting_data') : t('notice.executing_clause_mapping')}
                         </h2>
-                        <p className="text-[#8B95A5] font-medium">Processing through secure enterprise protocol.</p>
+                        <p className="text-[#8B95A5] font-medium">{t('notice.processing_secure_protocol')}</p>
                     </div>
                 )}
 
@@ -220,7 +220,7 @@ export default function NoticeScannerPage() {
                         </div>
                         <p className="text-red-400 font-bold text-xl mb-8">{error}</p>
                         <button onClick={reset} className="px-10 py-4 bg-white text-black hover:bg-red-600 hover:text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all active:scale-95 shadow-lg">
-                            Retry Process
+                            {t('notice.retry_process')}
                         </button>
                     </div>
                 )}
@@ -231,7 +231,7 @@ export default function NoticeScannerPage() {
                         <div className="bg-[#0D1220] rounded-[3rem] p-8 sm:p-12 shadow-2xl border border-[#1E293B] relative overflow-hidden">
                             <div className="absolute top-8 right-8">
                                 <button onClick={reset} className="text-[10px] uppercase tracking-[0.2em] font-black text-[#8B95A5] hover:text-[#E87D20] transition-colors bg-[#121827] px-5 py-2 rounded-full border border-[#1E293B]">
-                                    New Scan
+                                    {t('notice.new_scan')}
                                 </button>
                             </div>
 
@@ -239,17 +239,17 @@ export default function NoticeScannerPage() {
                                 <div className="w-12 h-12 rounded-2xl bg-[#E87D20]/10 text-[#E87D20] flex items-center justify-center border border-[#E87D20]/20">
                                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
                                 </div>
-                                <h2 className="font-black text-3xl text-white font-display">Compliance Summary</h2>
+                                <h2 className="font-black text-3xl text-white font-display">{t('notice.compliance_summary')}</h2>
                             </div>
 
                             {/* Risk & Deadline Dashboard */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
                                 <div className={`p-8 rounded-[2rem] border ${analysis.deadline_status === 'CRITICAL' ? 'bg-red-500/10 border-red-500/30' : 'bg-[#121827] border-[#1E293B]'}`}>
-                                    <p className="text-[10px] uppercase tracking-widest text-[#8B95A5] font-black mb-2">Notice Deadline</p>
+                                    <p className="text-[10px] uppercase tracking-widest text-[#8B95A5] font-black mb-2">{t('notice.deadline')}</p>
                                     <p className="font-display font-black text-3xl text-white">{analysis.response_deadline_date || 'N/A'}</p>
                                 </div>
                                 <div className={`p-8 rounded-[2rem] border ${analysis.risk_level === 'HIGH' ? 'bg-[#E87D20]/10 border-[#E87D20]/30' : 'bg-emerald-500/10 border-emerald-500/30'}`}>
-                                    <p className="text-[10px] uppercase tracking-widest text-[#8B95A5] font-black mb-2">Legal Risk Index</p>
+                                    <p className="text-[10px] uppercase tracking-widest text-[#8B95A5] font-black mb-2">{t('notice.legal_risk_index')}</p>
                                     <p className="font-display font-black text-3xl text-white">{analysis.risk_score || '0'}/100 <span className="text-sm font-medium opacity-60 ml-2">({analysis.risk_level})</span></p>
                                 </div>
                             </div>
@@ -258,7 +258,7 @@ export default function NoticeScannerPage() {
                             {analysis.demands && (
                                 <div className="space-y-4 mb-10">
                                     <h3 className="font-bold text-white text-xl flex items-center gap-2">
-                                        <span className="w-1.5 h-6 bg-[#E87D20] rounded-full"></span> Mapped Clauses
+                                        <span className="w-1.5 h-6 bg-[#E87D20] rounded-full"></span> {t('notice.mapped_clauses')}
                                     </h3>
                                     <div className="grid gap-3">
                                         {analysis.demands.map((d, i) => (
@@ -275,7 +275,7 @@ export default function NoticeScannerPage() {
                                 <div className="pt-10 border-t border-[#1E293B]">
                                     <h3 className="font-bold text-white text-2xl mb-6 flex items-center gap-3">
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E87D20" strokeWidth="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
-                                        Strategic Recommendations
+                                        {t('notice.strategic_recommendations')}
                                     </h3>
                                     <div className="grid gap-4 sm:grid-cols-2">
                                         {parsedActions.map((a, i) => (
@@ -295,3 +295,4 @@ export default function NoticeScannerPage() {
         </div>
     );
 }
+

@@ -5,9 +5,9 @@ import axios from 'axios';
 
 const API = import.meta.env.VITE_HTTP_API_URL;
 
-/* ═══════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    DATA & ICONS
-   ═══════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const TYPES = [
     { id: 'police', icon: <path d="M11 15v2m-6-2v2m12-2v2M4 11v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4m-12-3h8m-9-4h10a2 2 0 0 1 2 2v2H3V6a2 2 0 0 1 2-2z" />, key: 'complaint.police', color: 'from-blue-500 to-cyan-500' },
     { id: 'rti', icon: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" x2="8" y1="13" y2="13" /><line x1="16" x2="8" y1="17" y2="17" /><polyline points="10 9 9 9 8 9" /></>, key: 'complaint.rti', color: 'from-emerald-500 to-green-500' },
@@ -21,12 +21,12 @@ const FIELDS = [
     { key: 'name', type: 'text', i18n: 'complaint.name', required: true },
     { key: 'phone', type: 'tel', i18n: 'complaint.phone', required: false },
     { key: 'address', type: 'text', i18n: 'complaint.address', required: false },
-    { key: 'email', type: 'email', i18n: 'Email Address', required: false },
+    { key: 'email', type: 'email', i18n: 'complaint.email', required: false },
 ];
 
-/* ═══════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    CONSTELLATION PARTICLES (Exact Dashboard Background)
-   ═══════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function ConstellationParticles() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const particles = useRef<{ x: number; y: number; vx: number; vy: number; size: number; opacity: number; color: string }[]>([]);
@@ -120,9 +120,9 @@ function ConstellationParticles() {
     return <canvas ref={canvasRef} className="fixed inset-0 z-0 pointer-events-none opacity-80" />;
 }
 
-/* ═══════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    MAIN COMPLAINT GENERATOR PAGE
-   ═══════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 type Step = 'type' | 'form' | 'done';
 
 export default function ComplaintGeneratorPage() {
@@ -142,7 +142,7 @@ export default function ComplaintGeneratorPage() {
 
     const generate = async () => {
         if (!form.name.trim() || !form.incident.trim()) {
-            setError('Name and incident details are compulsory fields.');
+            setError(t('complaint.required_error'));
             return;
         }
         setLoading(true); setError('');
@@ -159,19 +159,19 @@ export default function ComplaintGeneratorPage() {
             });
             setResult(data);
             setStep('done');
-        } catch { setError('Connection error. Please wait and try again.'); }
+        } catch { setError(t('complaint.connection_error')); }
         finally { setLoading(false); }
     };
 
     return (
         <div className="min-h-screen bg-[#050505] text-white relative overflow-hidden font-sans selection:bg-[#E87D20]/30 selection:text-white flex flex-col">
 
-            {/* ════════════ BACKGROUND EFFECTS (Same as Dashboard) ════════════ */}
+            {/* â•â•â•â•â•â•â•â•â•â•â•â• BACKGROUND EFFECTS (Same as Dashboard) â•â•â•â•â•â•â•â•â•â•â•â• */}
             <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#121827] via-[#050505] to-[#050505] pointer-events-none z-0"></div>
             <ConstellationParticles />
             <div className="fixed top-[-20%] left-[-10%] w-[500px] h-[500px] bg-[#E87D20]/20 rounded-full mix-blend-screen filter blur-[100px] opacity-40 animate-pulse-slow pointer-events-none z-0"></div>
 
-            {/* ════════════ MAIN CONTENT ════════════ */}
+            {/* â•â•â•â•â•â•â•â•â•â•â•â• MAIN CONTENT â•â•â•â•â•â•â•â•â•â•â•â• */}
             <main className="flex-1 relative z-10 px-4 py-8 sm:py-12 max-w-3xl mx-auto w-full space-y-8 animate-fade-in">
 
                 {/* Hero Greeting Section (Dashboard Style) */}
@@ -179,12 +179,10 @@ export default function ComplaintGeneratorPage() {
                     <div className="absolute -right-10 -top-10 w-48 h-48 bg-[#E87D20]/10 rounded-full mix-blend-screen blur-[60px] pointer-events-none"></div>
                     <div className="relative z-10">
                         <h2 className="text-sm font-bold tracking-widest text-[#E87D20] uppercase mb-3 flex items-center gap-2">
-                            📝 Professional Drafter
+                            {t('complaint.hero_badge')}
                         </h2>
-                        <h1 className="text-2xl sm:text-4xl font-extrabold text-white font-display leading-tight mb-3">AI Legal Drafter</h1>
-                        <p className="text-[#8B95A5] font-medium text-lg max-w-xl">
-                            Automatically write professional, watertight legal drafts in minutes. Approved formats accepted directly by authorities.
-                        </p>
+                        <h1 className="text-2xl sm:text-4xl font-extrabold text-white font-display leading-tight mb-3">{t('complaint.hero_title')}</h1>
+                        <p className="text-[#8B95A5] font-medium text-lg max-w-xl">{t('complaint.hero_desc')}</p>
                     </div>
                 </section>
 
@@ -193,7 +191,7 @@ export default function ComplaintGeneratorPage() {
                     <section className="space-y-6 animate-slide-up">
                         <div className="flex items-center gap-3 px-2">
                             <span className="w-2 h-6 bg-[#E87D20] rounded-full shadow-[0_0_15px_rgba(232,125,32,0.3)]"></span>
-                            <h3 className="text-2xl font-bold text-white font-display">Select Document Category</h3>
+                            <h3 className="text-2xl font-bold text-white font-display">{t('complaint.select_type')}</h3>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {TYPES.map((tp, i) => (
@@ -220,21 +218,21 @@ export default function ComplaintGeneratorPage() {
                 {step === 'form' && (
                     <div className="animate-slide-up space-y-6">
                         <button onClick={() => setStep('type')} className="text-[#8B95A5] hover:text-[#E87D20] text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M19 12H5M12 19l-7-7 7-7" /></svg> Change Category
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M19 12H5M12 19l-7-7 7-7" /></svg> {t('complaint.change_category')}
                         </button>
 
                         <div className="bg-[#090C15]/80 backdrop-blur-2xl border border-[#1E293B] p-5 sm:p-10 rounded-2xl sm:rounded-[2.5rem] shadow-2xl space-y-8 relative overflow-hidden">
-                            <h2 className="text-2xl font-bold text-white font-display">Required Details</h2>
+                            <h2 className="text-2xl font-bold text-white font-display">{t('complaint.your_details')}</h2>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 {FIELDS.map(f => (
                                     <div key={f.key} className="space-y-2">
                                         <label className="text-[11px] font-black uppercase tracking-widest text-[#8B95A5] ml-1">
-                                            {f.i18n.startsWith('complaint.') ? t(f.i18n) : f.i18n}{f.required && <span className="text-red-500 ml-1">*</span>}
+                                            {t(f.i18n)}{f.required && <span className="text-red-500 ml-1">*</span>}
                                         </label>
                                         <input type={f.type} value={(form as any)[f.key]}
                                             onChange={e => set(f.key, e.target.value)}
-                                            placeholder={f.i18n.startsWith('complaint.') ? t(f.i18n) : f.i18n}
+                                            placeholder={t(f.i18n)}
                                             className="w-full px-5 py-4 bg-[#050505] border border-[#1E293B] rounded-2xl text-white focus:outline-none focus:border-[#E87D20] focus:ring-1 focus:ring-[#E87D20] transition-all" />
                                     </div>
                                 ))}
@@ -242,26 +240,26 @@ export default function ComplaintGeneratorPage() {
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t border-[#1E293B]/50">
                                 <div className="space-y-2">
-                                    <label className="text-[11px] font-black uppercase tracking-widest text-[#8B95A5] ml-1">State / Zone</label>
-                                    <input type="text" value={form.state} onChange={e => set('state', e.target.value)} placeholder="e.g. Maharashtra"
+                                    <label className="text-[11px] font-black uppercase tracking-widest text-[#8B95A5] ml-1">{t('complaint.state')}</label>
+                                    <input type="text" value={form.state} onChange={e => set('state', e.target.value)} placeholder={t('complaint.state_placeholder')}
                                         className="w-full px-5 py-4 bg-[#050505] border border-[#1E293B] rounded-2xl text-white focus:outline-none focus:border-[#E87D20] transition-all" />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[11px] font-black uppercase tracking-widest text-[#8B95A5] ml-1">City / District</label>
-                                    <input type="text" value={form.district} onChange={e => set('district', e.target.value)} placeholder="e.g. Mumbai"
+                                    <label className="text-[11px] font-black uppercase tracking-widest text-[#8B95A5] ml-1">{t('complaint.district')}</label>
+                                    <input type="text" value={form.district} onChange={e => set('district', e.target.value)} placeholder={t('complaint.district_placeholder')}
                                         className="w-full px-5 py-4 bg-[#050505] border border-[#1E293B] rounded-2xl text-white focus:outline-none focus:border-[#E87D20] transition-all" />
                                 </div>
                             </div>
 
                             <div className="space-y-2 pt-6 border-t border-[#1E293B]/50">
-                                <label className="text-[11px] font-black uppercase tracking-widest text-[#8B95A5] ml-1">Incident Description <span className="text-red-500 ml-1">*</span></label>
-                                <textarea value={form.incident} onChange={e => set('incident', e.target.value)} rows={5} placeholder="Describe exactly what happened chronologically..."
+                                <label className="text-[11px] font-black uppercase tracking-widest text-[#8B95A5] ml-1">{t('complaint.incident')} <span className="text-red-500 ml-1">*</span></label>
+                                <textarea value={form.incident} onChange={e => set('incident', e.target.value)} rows={5} placeholder={t('complaint.incident_placeholder')}
                                     className="w-full px-5 py-4 bg-[#050505] border border-[#1E293B] rounded-2xl text-white focus:outline-none focus:border-[#E87D20] transition-all resize-none" />
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-[11px] font-black uppercase tracking-widest text-[#8B95A5] ml-1">Expected Relief / Demands</label>
-                                <input type="text" value={form.relief} onChange={e => set('relief', e.target.value)} placeholder="What outcome do you want?"
+                                <label className="text-[11px] font-black uppercase tracking-widest text-[#8B95A5] ml-1">{t('complaint.relief_label')}</label>
+                                <input type="text" value={form.relief} onChange={e => set('relief', e.target.value)} placeholder={t('complaint.relief_placeholder')}
                                     className="w-full px-5 py-4 bg-[#050505] border border-[#1E293B] rounded-2xl text-white focus:outline-none focus:border-[#E87D20] transition-all" />
                             </div>
 
@@ -270,8 +268,8 @@ export default function ComplaintGeneratorPage() {
                             <button onClick={generate} disabled={loading}
                                 className="w-full py-5 bg-[linear-gradient(to_right,#E87D20,#FF512F)] hover:bg-[linear-gradient(to_right,#FF512F,#E87D20)] text-white shadow-[0_10px_30px_-5px_rgba(232,125,32,0.4)] rounded-2xl font-bold text-lg font-display active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-3">
                                 {loading ? (
-                                    <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Drafting via Bedrock AI...</>
-                                ) : 'Draft Legal Document 📄'}
+                                    <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> {t('complaint.drafting_loading')}</>
+                                ) : t('complaint.generate')}
                             </button>
                         </div>
                     </div>
@@ -283,11 +281,11 @@ export default function ComplaintGeneratorPage() {
                         <div className="bg-gradient-to-br from-emerald-600 to-green-800 rounded-[2.5rem] p-10 text-center shadow-2xl relative overflow-hidden border border-emerald-500/30">
                             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
                             <svg className="mx-auto text-white drop-shadow-md mb-6" xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
-                            <h2 className="font-black text-3xl font-display leading-tight mb-2 text-white">Ready to File</h2>
-                            <p className="font-medium text-emerald-100">Your professional draft is securely formatted as PDF.</p>
+                            <h2 className="font-black text-3xl font-display leading-tight mb-2 text-white">{t('complaint.ready_title')}</h2>
+                            <p className="font-medium text-emerald-100">{t('complaint.ready_desc')}</p>
 
                             <div className="bg-white/10 backdrop-blur-md rounded-2xl px-6 py-4 mt-8 inline-block border border-white/20">
-                                <p className="text-[10px] uppercase font-black tracking-widest text-green-100/60 mb-1">Secure Tracking Ref</p>
+                                <p className="text-[10px] uppercase font-black tracking-widest text-green-100/60 mb-1">{t('complaint.tracking_label')}</p>
                                 <p className="font-mono font-bold text-2xl tracking-widest text-white">{result.tracking_number}</p>
                             </div>
                         </div>
@@ -295,12 +293,12 @@ export default function ComplaintGeneratorPage() {
                         <a href={result.pdf_url} target="_blank" rel="noopener noreferrer"
                             className="flex items-center justify-center gap-3 w-full py-5 bg-[#0D1220] text-white border-2 border-[#1E293B] hover:border-[#E87D20] rounded-[1.5rem] font-bold text-lg transition-all group">
                             <svg className="group-hover:scale-110 transition-transform" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" x2="8" y1="13" y2="13" /><line x1="16" x2="8" y1="17" y2="17" /><polyline points="10 9 9 9 8 9" /></svg>
-                            Review & Download PDF
+                            {t('complaint.review_download')}
                         </a>
 
                         <button onClick={() => { setStep('type'); setResult(null); }}
                             className="w-full text-[13px] font-bold text-[#8B95A5] hover:text-white uppercase tracking-widest mt-4 transition-colors">
-                            Create Another Document
+                            {t('complaint.create_another')}
                         </button>
                     </div>
                 )}
@@ -308,3 +306,4 @@ export default function ComplaintGeneratorPage() {
         </div>
     );
 }
+

@@ -21,11 +21,11 @@ LEGAL_CORPUS_BUCKET = os.environ.get('LEGAL_CORPUS_BUCKET', '')
 DOMAIN_FILES = {
     'property':  ['property_guide.txt', 'consumer_protection.txt'],
     'family':    ['ipc_498a.txt', 'property_guide.txt'],
-    'consumer':  ['consumer_protection.txt'],
+    'consumer':  ['consumer_protection.txt', 'consumer_protection_act_2019.txt'],
     'criminal':  ['ipc_498a.txt', 'cyber_crime.txt'],
     'labor':     ['labor_laws.txt', 'consumer_protection.txt'],
     'cyber':     ['cyber_crime.txt'],
-    'general':   ['consumer_protection.txt', 'property_guide.txt', 'rti_guide_hi.txt'],
+    'general':   ['consumer_protection.txt', 'consumer_protection_act_2019.txt', 'property_guide.txt', 'rti_guide_hi.txt'],
 }
 
 # Cache — ek Lambda invocation mein same file dobara mat padhna
