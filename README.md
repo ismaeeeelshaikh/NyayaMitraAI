@@ -19,7 +19,7 @@ nyaya-mitra/
 - **Storage**: S3 (5 buckets)
 - **Auth**: Cognito User Pool
 - **API**: API Gateway HTTP + WebSocket
-- **AI**: AWS Bedrock (Claude 3.5 Sonnet)
+- **AI**: AWS Bedrock (Amazon Nova Pro)
 - **Frontend**: React + Vite
 
 ## Quick Start
